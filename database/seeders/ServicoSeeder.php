@@ -37,7 +37,7 @@ class ServicoSeeder extends Seeder
                 'descricao' => 'Camada de gel sobre a unha natural para evitar quebras e fazer o esmalte durar semanas.',
                 'preco' => 70.00,
                 'duracao_minutos' => 60,
-                'foto_exemplo' => 'imagem4.webp', // Adicione o nome do arquivo correspondente
+                'foto_exemplo' => 'imagem4.jpg', // Adicione o nome do arquivo correspondente
             ],
         ];
 

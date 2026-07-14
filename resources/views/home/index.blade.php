@@ -164,8 +164,6 @@
                 <h2 class="text-6xl md:text-8xl font-title mt-4 leading-tight">Suas unhas, <br> sua <span class="italic">assinatura.</span></h2>
                 <p class="mt-6 text-zinc-400 text-lg max-w-md">Especialista em técnicas avançadas de fibra de vidro e gel, unindo resistência e naturalidade para mulheres empoderadas.</p>
                 <div class="mt-10 flex flex-wrap gap-4">
-                    <!-- <a href="#servicos" class="bg-neon text-white font-bold px-8 py-4 rounded-xl transition transform hover:scale-105">Ver Procedimentos</a> -->
-
                     <a href="{{ route('portfolio') }}" class="flex items-center justify-center gap-2 border border-pink-500/30 bg-pink-500/10 text-neon px-8 py-4 rounded-xl hover:bg-pink-500/20 transition">
                         Galeria
                     </a>
@@ -181,13 +179,17 @@
             </div>
             <div class="relative">
                 <div class="absolute -top-10 -left-10 w-64 h-64 bg-purple-600 rounded-full filter blur-[120px] opacity-20"></div>
+                
+                {{-- Foto Hero Local Manual --}}
                 <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
                    <img src="{{ asset('img/foto_site_maecielle.jpg') }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
                 </div>
-//COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
-                <!-- <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
+
+                {{-- COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
+                <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
                    <img src="{{ isset($configuracoes->foto_hero) ? asset('storage/' . $configuracoes->foto_hero) : 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
-                </div> -->
+                </div> 
+                --}}
             </div>
         </div>
     </section>
@@ -203,10 +205,10 @@
             @foreach($servicos as $servico)
             <div class="card-glass rounded-3xl hover:border-neon transition group flex flex-col overflow-hidden">
                 
-                {{-- Foto do Procedimento --}}
+                {{-- Foto do Procedimento (Buscando de public/img/) --}}
                 <div class="w-full h-48 bg-zinc-900 overflow-hidden relative">
                     @if($servico->foto_exemplo)
-                        <img src="{{ asset('storage/' . $servico->foto_exemplo) }}" alt="{{ $servico->nome }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <img src="{{ asset('img/' . $servico->foto_exemplo) }}" alt="{{ $servico->nome }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='{{ asset('storage/' . $servico->foto_exemplo) }}';">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-zinc-700 bg-zinc-950">
                             <i class="la la-image text-5xl"></i>
@@ -266,18 +268,20 @@
             </div>
 
             <div class="relative rounded-3xl overflow-hidden card-glass p-2 aspect-[4/3]">
+                {{-- Exibição Manual da Imagem Local do Salão --}}
+                <img src="{{ asset('img/foto_do_salao.jpg') }}" class="w-full h-full object-cover rounded-2xl transition duration-500" alt="Espaço NailsStudio">
+
+                {{-- COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
                 @if(isset($configuracoes->foto_espaco))
-//COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
-                    <!-- <img src="{{ asset('storage/' . $configuracoes->foto_espaco) }}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-500" alt="Espaço NailsStudio"> -->
-                     <img src="{{ asset('img/foto_do_salao.jpg') }} class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-500" alt="Espaço NailsStudio">
-                @else
+                    @else
                     <div class="w-full h-full rounded-2xl bg-zinc-900 border border-zinc-800/50 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden group">
                         <div class="absolute inset-0 bg-gradient-to-tr from-pink-500/10 to-transparent opacity-50"></div>
                         <i class="la la-gem text-5xl text-neon mb-4"></i>
                         <h3 class="font-title text-xl text-white">Espaço NailsStudio</h3>
                         <p class="text-xs text-zinc-500 max-w-xs mt-2">Um ambiente planejado para o seu conforto, com atendimento exclusivo e café gourmet aguardando por você.</p>
                     </div>
-                @endif>
+                @endif
+                --}}
             </div>
         </div>
     </section>
@@ -287,7 +291,6 @@
         <div class="max-w-6xl mx-auto">
             <div class="text-center max-w-xl mx-auto mb-12">
                 <span class="text-neon font-bold tracking-widest uppercase text-xs">Fale Conosco</span>
-                <!-- <h2 class="text-3xl font-title mt-1 text-white">Agende Seu Momento</h2> -->
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

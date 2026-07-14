@@ -20,41 +20,97 @@
 <body class="text-zinc-200">
 
     {{-- HEADER --}}
-    <header class="p-6 flex justify-between items-center border-b border-zinc-800">
-        <h1 class="text-2xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></h1>
-        <nav class="hidden md:flex items-center gap-8 font-semibold text-sm uppercase tracking-widest">
-            <a href="#sobre-nos" class="hover:text-neon transition">Sobre Nós</a>
-            <a href="#servicos" class="hover:text-neon transition">Serviços</a>
-            <a href="#contato" class="hover:text-neon transition">Contato</a>
+    <header class="p-6 border-b border-zinc-800 relative bg-[#0f0f0f]">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></h1>
+            
+            <nav class="hidden md:flex items-center gap-8 font-semibold text-sm uppercase tracking-widest">
+                <a href="#sobre-nos" class="hover:text-neon transition">Sobre Nós</a>
+                <a href="#servicos" class="hover:text-neon transition">Serviços</a>
+                <a href="#contato" class="hover:text-neon transition">Contato</a>
+                
+                @auth
+                    @role('admin')
+                        <a href="{{ route('admin.painel') }}" class="flex items-center gap-1.5 border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 text-neon px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            <i class="la la-cog text-sm"></i>
+                            Painel Admin
+                        </a>
+                    @endrole
+
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-zinc-500 hover:text-red-400 text-xs font-bold uppercase tracking-wider transition-all">
+                            Sair
+                        </button>
+                    </form>
+
+                    <span class="text-zinc-400 normal-case tracking-normal font-normal text-xs">
+                        Olá, <span class="text-white font-semibold">{{ auth()->user()->name }}</span>!
+                    </span>
+                @endauth
+
+                @guest
+                    <a href="{{ route('login') }}" class="flex items-center gap-2 border border-zinc-800 bg-zinc-900/50 hover:border-pink-500/50 hover:text-white text-zinc-300 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                        <i class="la la-user text-sm text-neon"></i>
+                        Entrar
+                    </a>
+                @endguest
+            </nav>
+
+            <button id="btn-menu" class="md:hidden text-2xl text-zinc-200 hover:text-neon focus:outline-none transition">
+                <i class="la la-bars"></i>
+            </button>
+        </div>
+
+        <div id="menu-mobile" class="hidden md:hidden mt-4 pt-4 border-t border-zinc-800 flex-col gap-4 font-semibold text-sm uppercase tracking-widest">
+            <a href="#sobre-nos" class="hover:text-neon py-2 transition block">Sobre Nós</a>
+            <a href="#servicos" class="hover:text-neon py-2 transition block">Serviços</a>
+            <a href="#contato" class="hover:text-neon py-2 transition block">Contato</a>
             
             @auth
                 @role('admin')
-                    <a href="{{ route('admin.painel') }}" class="flex items-center gap-1.5 border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 text-neon px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                    <a href="{{ route('admin.painel') }}" class="flex items-center justify-center gap-1.5 border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 text-neon py-2.5 rounded-lg text-xs font-bold transition-all w-full">
                         <i class="la la-cog text-sm"></i>
                         Painel Admin
                     </a>
                 @endrole
 
-                <form action="{{ route('logout') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="text-zinc-500 hover:text-red-400 text-xs font-bold uppercase tracking-wider transition-all">
-                        Sair
-                    </button>
-                </form>
-
-                <span class="text-zinc-400 normal-case tracking-normal font-normal text-xs">
-                    Olá, <span class="text-white font-semibold">{{ auth()->user()->name }}</span>!
-                </span>
+                <div class="flex justify-between items-center py-2 border-t border-zinc-800/50 mt-2">
+                    <span class="text-zinc-400 normal-case tracking-normal font-normal text-xs">
+                        Olá, <span class="text-white font-semibold">{{ auth()->user()->name }}</span>!
+                    </span>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-zinc-500 hover:text-red-400 text-xs font-bold uppercase tracking-wider transition-all">
+                            Sair
+                        </button>
+                    </form>
+                </div>
             @endauth
 
             @guest
-                <a href="{{ route('login') }}" class="flex items-center gap-2 border border-zinc-800 bg-zinc-900/50 hover:border-pink-500/50 hover:text-white text-zinc-300 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 border border-zinc-800 bg-zinc-900/50 hover:border-pink-500/50 hover:text-white text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all w-full">
                     <i class="la la-user text-sm text-neon"></i>
                     Entrar
                 </a>
             @endguest
-        </nav>
+        </div>
     </header>
+
+    <script>
+        const btnMenu = document.getElementById('btn-menu');
+        const menuMobile = document.getElementById('menu-mobile');
+
+        btnMenu.addEventListener('click', () => {
+            if (menuMobile.classList.contains('hidden')) {
+                menuMobile.classList.remove('hidden');
+                menuMobile.classList.add('flex');
+            } else {
+                menuMobile.classList.remove('flex');
+                menuMobile.classList.add('hidden');
+            }
+        });
+    </script>
 
     @if(auth()->check() && isset($agendamentoAtivo))
         <div class="max-w-6xl mx-auto px-6 mt-8">

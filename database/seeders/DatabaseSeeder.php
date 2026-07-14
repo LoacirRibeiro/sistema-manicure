@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ServicoSeeder::class,
             RoleSeeder::class,     // Cria as roles: admin, manicure, etc.
-            HorarioSeeder::class, 
-            ServicoSeeder::class, // Cria a grade de horários
+            HorarioSeeder::class,  // Cria a grade de horários
+            ServicoSeeder::class, 
         ]);
 
         // 2. Cria o usuário administrador se ele não existir

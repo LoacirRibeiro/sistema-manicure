@@ -72,7 +72,7 @@
                         <td class="p-4">
                             <div class="w-12 h-12 bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800">
                                 @if($s->foto_exemplo)
-                                    <img src="{{ asset('storage/' . $s->foto_exemplo) }}" class="w-full h-full object-cover"> 
+                                    <img src="{{ asset('img/' . $s->foto_exemplo) }}" class="w-full h-full object-cover"> 
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-zinc-700"><i class="la la-image text-xl"></i></div>
                                 @endif

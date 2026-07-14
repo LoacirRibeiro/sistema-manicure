@@ -20,7 +20,7 @@
     {{-- Header --}}
     <header class="p-6 bg-zinc-950/80 border-b border-zinc-900 flex justify-between items-center backdrop-blur-md sticky top-0 z-50">
         <div class="flex items-center gap-3">
-            <span class="bg-pink-500/10 text-neon font-bold text-xs px-3 py-1 rounded-full uppercase tracking-widest border border-pink-500/20">Admin</span>
+            <!-- <span class="bg-pink-500/10 text-neon font-bold text-xs px-3 py-1 rounded-full uppercase tracking-widest border border-pink-500/20">Admin</span> -->
             <a href="#" class="text-xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></a>
         </div>
         <div class="flex items-center gap-4">

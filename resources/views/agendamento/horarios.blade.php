@@ -90,55 +90,69 @@
                     </div>
                 </div>
 
-                {{-- CALENDÁRIO COM ATUALIZAÇÃO DE STATUS EM TEMPO REAL --}}
+                {{-- CALENDÁRIO COM APARÊNCIA ALINHADA --}}
                 <div class="space-y-3">
                     <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400">Selecione o Dia desejado</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                    <div class="grid grid-cols-7 gap-2">
+                        @php
+                            // Tradução otimizada carregada fora do loop
+                            $diasSemanaPtBr = [
+                                'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
+                                'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
+                            ];
+                        @endphp
+
                         @for($i = 0; $i < 14; $i++)
                             @php
                                 $dataBotao = \Carbon\Carbon::today()->addDays($i);
                                 $stringData = $dataBotao->format('Y-m-d');
                                 
-                                $diasSemanaPtBr = [
-                                    'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
-                                    'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
-                                ];
                                 $diaSemana = $diasSemanaPtBr[$dataBotao->format('D')];
                                 $diaMes = $dataBotao->format('d');
                                 
                                 $isCheck = ($stringData === $dataSelecionada);
-                                $estaLotado = in_array($stringData, $diasLotados ?? []);
+                                $isLotado = in_array($stringData, $diasLotados ?? []);
                                 $isDomingo = $dataBotao->isSunday();
                             @endphp
                             
-                            <label class="{{ ($estaLotado || $isDomingo) ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                            <label class="cursor-pointer {{ $isDomingo ? 'pointer-events-none' : '' }}">
                                 <input type="radio" name="data_escolhida" value="{{ $stringData }}" class="hidden peer" 
-                                       {{ $isCheck ? 'checked' : '' }}
-                                       {{ ($estaLotado || $isDomingo) ? 'disabled' : '' }}
-                                       onchange="this.form.action='{{ route('agendamento.horarios') }}'; this.form.method='GET'; this.form.submit();">
+                                    {{ $isCheck ? 'checked' : '' }}
+                                    {{ ($isLotado || $isDomingo) ? 'disabled' : '' }}
+                                    onchange="this.form.action='{{ route('agendamento.horarios') }}'; this.form.method='GET'; this.form.submit();">
                                 
-                                @if($isDomingo)
-                                    {{-- Domingo Fechado --}}
-                                    <div class="flex flex-col items-center justify-center py-3 rounded-xl border bg-zinc-950/40 border-zinc-900 text-zinc-600 select-none pointer-events-none">
-                                        <span class="text-[9px] uppercase tracking-wider font-semibold text-zinc-500">{{ $diaSemana }}</span>
-                                        <span class="text-base font-bold mt-0.5 text-zinc-500">{{ $diaMes }}</span>
-                                        <span class="text-[7px] uppercase font-bold tracking-tighter mt-1 text-zinc-600">Fechado</span>
-                                    </div>
-                                @elseif($estaLotado)
-                                    {{-- Dia Lotado ou Bloqueado --}}
-                                    <div class="flex flex-col items-center justify-center py-3 rounded-xl border bg-zinc-950/80 border-red-950/30 text-zinc-500 select-none pointer-events-none">
-                                        <span class="text-[9px] uppercase tracking-wider font-semibold text-red-400/80">{{ $diaSemana }}</span>
-                                        <span class="text-base font-bold mt-0.5 text-zinc-400 line-through">{{ $diaMes }}</span>
-                                        <span class="text-[7px] uppercase font-bold tracking-tighter mt-1 text-red-500">● Lotado</span>
-                                    </div>
-                                @else
-                                    {{-- Dia Ativo Normal com Vagas --}}
-                                    <div class="flex flex-col items-center justify-center py-3 rounded-xl border bg-zinc-900/40 border-zinc-800 text-zinc-400 transition-all peer-checked:bg-zinc-900 peer-checked:border-pink-500 peer-checked:text-neon hover:border-zinc-700">
-                                        <span class="text-[9px] uppercase tracking-wider font-semibold text-zinc-400 peer-checked:text-pink-400">{{ $diaSemana }}</span>
-                                        <span class="text-base font-bold mt-0.5">{{ $diaMes }}</span>
-                                        <span class="text-[7px] uppercase font-bold tracking-tighter mt-1 text-emerald-500 peer-checked:text-emerald-400">● Vagas</span>
-                                    </div>
-                                @endif
+                                <div class="flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all 
+                                    {{ $isCheck ? 'bg-zinc-900 border-pink-500 text-neon font-semibold' : 'bg-zinc-900/40 hover:border-zinc-700' }}
+                                    @if(!$isCheck)
+                                        @if($isDomingo)
+                                            border-zinc-800 text-zinc-600 opacity-60
+                                        @elseif($isLotado)
+                                            border-red-950/80 text-red-400/90 hover:bg-red-950/10
+                                        @else
+                                            border-emerald-950/80 text-emerald-400/90 hover:bg-emerald-950/10
+                                        @endif
+                                    @endif
+                                ">
+                                    <span class="text-[9px] uppercase tracking-wider font-semibold 
+                                        @if(!$isCheck)
+                                            {{ $isDomingo ? 'text-zinc-600' : ($isLotado ? 'text-red-500/70' : 'text-emerald-500/70') }}
+                                        @endif
+                                    ">
+                                        {{ $diaSemana }}
+                                    </span>
+
+                                    <span class="text-base font-bold mt-0.5">{{ $diaMes }}</span>
+
+                                    <span class="text-[7px] uppercase font-bold tracking-tighter mt-0.5">
+                                        @if($isDomingo)
+                                            Fechado
+                                        @elseif($isLotado)
+                                            <span class="text-red-500">● Lotado</span>
+                                        @else
+                                            <span class="text-emerald-500">● Vagas</span>
+                                        @endif
+                                    </span>
+                                </div>
                             </label>
                         @endfor
                     </div>

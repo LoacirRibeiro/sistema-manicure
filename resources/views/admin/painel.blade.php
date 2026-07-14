@@ -130,7 +130,15 @@
             </div>
         </div>
 
-        {{-- FILTRO DE DIAS (MANTIDO INTACTO) --}}
+        {{-- FILTRO DE DIAS OTIMIZADO --}}
+        @php
+            // Movemos o array de tradução para fora do loop (roda apenas 1 vez)
+            $diasSemanaPtBr = [
+                'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
+                'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
+            ];
+        @endphp
+
         <form id="filtroDataForm" action="{{ route('admin.painel') }}" method="GET" class="space-y-3">
             <div class="grid grid-cols-7 gap-2">
                 @for($i = 0; $i < 14; $i++)
@@ -138,10 +146,6 @@
                         $dataBotao = \Carbon\Carbon::today()->addDays($i);
                         $stringData = $dataBotao->format('Y-m-d');
                         
-                        $diasSemanaPtBr = [
-                            'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
-                            'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
-                        ];
                         $diaSemana = $diasSemanaPtBr[$dataBotao->format('D')];
                         $diaMes = $dataBotao->format('d');
                         
@@ -149,16 +153,19 @@
                         $isLotado = in_array($stringData, $diasLotados ?? []);
                         $isDomingo = $dataBotao->isSunday();
                     @endphp
-                    <label class="cursor-pointer">
+                    
+                    {{-- Se for domingo, adicionamos pointer-events-none para evitar cliques desnecessários --}}
+                    <label class="cursor-pointer {{ $isDomingo ? 'pointer-events-none' : '' }}">
                         <input type="radio" name="data_escolhida" value="{{ $stringData }}" class="hidden peer" 
                             {{ $isCheck ? 'checked' : '' }}
+                            {{ $isDomingo ? 'disabled' : '' }} {{-- Desativa o input se for domingo --}}
                             onchange="this.form.submit();">
                         
                         <div class="flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all 
                             {{ $isCheck ? 'bg-zinc-900 border-pink-500 text-neon' : 'bg-zinc-900/40 hover:border-zinc-700' }}
                             @if(!$isCheck)
                                 @if($isDomingo)
-                                    border-zinc-800 text-zinc-600
+                                    border-zinc-800 text-zinc-600 opacity-60
                                 @elseif($isLotado)
                                     border-red-950/80 text-red-400/90 hover:bg-red-950/10
                                 @else

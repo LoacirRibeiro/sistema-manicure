@@ -182,7 +182,7 @@
                 
                 {{-- Foto Hero Local Manual --}}
                 <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
-                   <img src="{{ asset('img/foto_site_maecielle.jpg') }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
+                   <img src="{{ asset('img/marcielle.jpg') }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
                 </div>
 
                 {{-- COMENTADO PARA SUBIR IMAGENS MANUALMENTE 

@@ -32,5 +32,17 @@ class DatabaseSeeder extends Seeder
 
         // 3. Atribui a role de admin do Spatie/Backpack para este usuário
         $admin->assignRole('admin');
+
+        // 4. Cria a manicure profissional (Marcielle)
+        $manicure = User::factory()->create([
+            'name' => 'Marcielle Paiva',
+            'email' => 'marcielle@salao.com',
+            'telefone' => '(63) 99218-5324',
+            'password' => 'senha123', // Altere para a senha que preferir acessar o painel
+        ]);
+
+        // 5. Atribui a role de 'manicure' para ela (criada previamente no seu RoleSeeder)
+        $manicure->assignRole('manicure');
+    
     }
 }

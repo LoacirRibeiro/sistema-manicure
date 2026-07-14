@@ -38,9 +38,15 @@
                         <input type="number" name="duracao_minutos" value="60" required class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs text-zinc-400 mb-1 uppercase tracking-wider">Foto do Procedimento</label>
-                        <input type="file" name="foto_exemplo" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-1.5 text-zinc-400 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700">
-                    </div>
+                        <label class="block text-xs text-zinc-400 mb-1 uppercase tracking-wider">Imagem do Procedimento (Local)</label>
+                        <select name="foto_exemplo" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-300 focus:outline-none focus:border-pink-500 text-sm">
+                            <option value="unhas1.jpg">Unhas Clássicas (unhas1.jpg)</option>
+                            <option value="unhas2.jpg">Alongamento em Gel (unhas2.jpg)</option>
+                            <option value="unhas3.jpg">Nail Art Neon (unhas3.jpg)</option>
+                            <option value="unhas4.jpg">Fibra de Vidro (unhas4.jpg)</option>
+                        </select>
+
+                        </div>
                 </div>
 
                 <div>
@@ -72,7 +78,7 @@
                         <td class="p-4">
                             <div class="w-12 h-12 bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800">
                                 @if($s->foto_exemplo)
-                                    <img src="{{ asset('storage/' . $s->foto_exemplo) }}" class="w-full h-full object-cover">
+                                    <img src="{{ asset('img/' . $s->foto_exemplo) }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('storage/' . $s->foto_exemplo) }}';">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-zinc-700"><i class="la la-image text-xl"></i></div>
                                 @endif
@@ -89,7 +95,7 @@
                                 <i class="la la-edit"></i>
                             </button>
 
-                            {{-- Form Deletar (Agora controlado via ID único por JavaScript) --}}
+                            {{-- Form Deletar --}}
                             <form id="form-deletar-{{ $s->id }}" action="{{ route('admin.servicos.destroy', $s->id) }}" method="POST" class="hidden">
                                 @csrf
                                 @method('DELETE')
@@ -132,9 +138,15 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-zinc-400 mb-1 uppercase tracking-wider">Nova Foto (Opcional)</label>
-                    <input type="file" name="foto_exemplo" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-1.5 text-zinc-400 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700">
-                </div>
+                    <label class="block text-xs text-zinc-400 mb-1 uppercase tracking-wider">Imagem do Procedimento (Local)</label>
+                    <select id="edit_foto" name="foto_exemplo" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-300 focus:outline-none focus:border-pink-500 text-sm">
+                        <option value="unhas1.jpg">Unhas Clássicas (unhas1.jpg)</option>
+                        <option value="unhas2.jpg">Alongamento em Gel (unhas2.jpg)</option>
+                        <option value="unhas3.jpg">Nail Art Neon (unhas3.jpg)</option>
+                        <option value="unhas4.jpg">Fibra de Vidro (unhas4.jpg)</option>
+                    </select>
+
+                    </div>
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1 uppercase tracking-wider">Descrição</label>
                     <textarea id="edit_descricao" name="descricao" rows="3" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-pink-500 text-sm"></textarea>
@@ -155,6 +167,12 @@
             document.getElementById('edit_preco').value = servico.preco;
             document.getElementById('edit_duracao').value = servico.duracao_minutos;
             document.getElementById('edit_descricao').value = servico.descricao || '';
+            
+            // Define a foto atual selecionada no dropdown se já existir
+            if (servico.foto_exemplo) {
+                document.getElementById('edit_foto').value = servico.foto_exemplo;
+            }
+            
             document.getElementById('modalEditar').classList.remove('hidden');
         }
 
@@ -162,28 +180,27 @@
             document.getElementById('modalEditar').classList.add('hidden');
         }
 
-        // 🔥 SweetAlert2: Confirmação Estilizada para Exclusão
+        // SweetAlert2: Confirmação Estilizada para Exclusão
         function confirmarExclusao(id, nome) {
             Swal.fire({
                 title: 'Tem certeza?',
                 text: `O serviço "${nome}" será excluído permanentemente.`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#db2777', /* Rosa do Tailwind (pink-600) */
-                cancelButtonColor: '#27272a',  /* Zinc escuro */
+                confirmButtonColor: '#db2777', 
+                cancelButtonColor: '#27272a',  
                 confirmButtonText: 'Sim, excluir!',
                 cancelButtonText: 'Cancelar',
-                background: '#18181b',         /* Fundo Escuro */
+                background: '#18181b',         
                 color: '#f4f4f5'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Submete o formulário oculto correspondente
                     document.getElementById(`form-deletar-${id}`).submit();
                 }
             });
         }
 
-        // 🪄 SweetAlert2: Alerta de Notificação de Sucesso vinda do Laravel Session
+        // SweetAlert2: Alerta de Notificação de Sucesso vinda do Laravel Session
         @if(session('sucesso'))
             Swal.fire({
                 icon: 'success',
@@ -193,7 +210,7 @@
                 showConfirmButton: false,
                 background: '#18181b',
                 color: '#f4f4f5',
-                iconColor: '#10b981' /* Verde */
+                iconColor: '#10b981' 
             });
         @endif
     </script>

@@ -181,12 +181,13 @@
             </div>
             <div class="relative">
                 <div class="absolute -top-10 -left-10 w-64 h-64 bg-purple-600 rounded-full filter blur-[120px] opacity-20"></div>
-                <!-- <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
-                   <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
-                </div> -->
                 <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
-                   <img src="{{ isset($configuracoes->foto_hero) ? asset('storage/' . $configuracoes->foto_hero) : 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
+                   <img src="{{ asset('img/foto_site_maecielle.jpg') }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
                 </div>
+//COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
+                <!-- <div class="rounded-3xl border-2 border-neon p-2 transform rotate-3">
+                   <img src="{{ isset($configuracoes->foto_hero) ? asset('storage/' . $configuracoes->foto_hero) : 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }}" class="rounded-2xl shadow-2xl" alt="Unhas Maravilhosas">
+                </div> -->
             </div>
         </div>
     </section>
@@ -266,7 +267,9 @@
 
             <div class="relative rounded-3xl overflow-hidden card-glass p-2 aspect-[4/3]">
                 @if(isset($configuracoes->foto_espaco))
-                    <img src="{{ asset('storage/' . $configuracoes->foto_espaco) }}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-500" alt="Espaço NailsStudio">
+//COMENTADO PARA SUBIR IMAGENS MANUALMENTE 
+                    <!-- <img src="{{ asset('storage/' . $configuracoes->foto_espaco) }}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-500" alt="Espaço NailsStudio"> -->
+                     <img src="{{ asset('img/foto_do_salao.jpg') }} class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-500" alt="Espaço NailsStudio">
                 @else
                     <div class="w-full h-full rounded-2xl bg-zinc-900 border border-zinc-800/50 flex flex-col items-center justify-center text-center p-6 relative overflow-hidden group">
                         <div class="absolute inset-0 bg-gradient-to-tr from-pink-500/10 to-transparent opacity-50"></div>

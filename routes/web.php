@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\Admin\ConfiguracaoController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 // ==========================================
 // ROTAS PÚBLICAS (Acessíveis por qualquer visitante)
@@ -77,4 +78,37 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/configuracao', [ConfiguracaoController::class, 'editLanding'])->name('admin.landing.edit');
     Route::put('/configuracao', [ConfiguracaoController::class, 'updateLanding'])->name('admin.landing.update');
 
+
+    Route::get('/gerar-meu-backup-secreto', function () {
+    $tables = DB::select('SHOW TABLES');
+    $dbName = env('DB_DATABASE');
+    $key = "Tables_in_" . $dbName;
+    
+    $sqlDump = "";
+    
+    foreach ($tables as $table) {
+        $tableName = $table->$key;
+        
+        // Estrutura da Tabela
+        $createTable = DB::select("SHOW CREATE TABLE {$tableName}");
+        $sqlDump .= "\n\n" . $createTable[0]->{'Create Table'} . ";\n\n";
+        
+        // Dados da Tabela
+        $rows = DB::select("SELECT * FROM {$tableName}");
+        foreach ($rows as $row) {
+            $rowArray = (array)$row;
+            $keys = array_keys($rowArray);
+            $values = array_map(function($value) {
+                if (is_null($value)) return 'NULL';
+                return "'" . addslashes($value) . "'";
+            }, array_values($rowArray));
+            
+            $sqlDump .= "INSERT INTO {$tableName} (" . implode(', ', $keys) . ") VALUES (" . implode(', ', $values) . ");\n";
+        }
+    }
+    
+    return response($sqlDump)
+        ->header('Content-Type', 'application/sql')
+        ->header('Content-Disposition', 'attachment; filename="backup_railway.sql"');
+});
 });

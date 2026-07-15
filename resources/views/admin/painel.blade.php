@@ -20,7 +20,6 @@
     {{-- Header --}}
     <header class="p-6 bg-zinc-950/80 border-b border-zinc-900 flex justify-between items-center backdrop-blur-md sticky top-0 z-50">
         <div class="flex items-center gap-3">
-            <!-- <span class="bg-pink-500/10 text-neon font-bold text-xs px-3 py-1 rounded-full uppercase tracking-widest border border-pink-500/20">Admin</span> -->
             <a href="#" class="text-xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></a>
         </div>
         <div class="flex items-center gap-4">
@@ -34,34 +33,45 @@
     {{-- Container com o botão de adicionar serviços (Apenas visível para Admin) --}}
     @if(auth()->check() && auth()->user()->hasRole('admin'))
         <div class="max-w-6xl mx-auto mb-8 px-6">
-            <div class="card-glass p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-center gap-4 border border-zinc-800/80 bg-zinc-900/10">
-                <div class="flex items-center gap-4 text-center sm:text-left">
-                    <div class="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-neon text-2xl">
+            <div class="card-glass p-6 rounded-3xl flex flex-col gap-6 border border-zinc-800/80 bg-zinc-900/10">
+                
+                {{-- Bloco de Texto e Ícone --}}
+                <div class="flex items-center gap-4 text-left">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-neon text-2xl shrink-0">
                         <i class="la la-cog"></i>
                     </div>
                     <div>
-                        <h4 class="text-base font-bold text-white">Painel de Controle </h4>
-                        <p class="text-xs text-zinc-400 mt-0.5">Como administrador, você pode criar, editar ou remover os procedimentos e fotos visíveis no site.</p>
+                        <h4 class="text-base font-bold text-white">Painel de Controle</h4>
+                        <p class="text-xs text-zinc-400 mt-0.5">Como administrador, você pode gerenciar faturamentos, extrair relatórios mensais de atendimentos, além de gerenciar os procedimentos do site.</p>
                     </div>
                 </div>
 
-                {{-- Botões para o CRUD --}}
-                <div class="flex items-center gap-2">
-                    <!-- <a href="{{ route('admin.landing.edit') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
-                        Imagens
+                {{-- Linha divisória sutil --}}
+                <div class="h-[1px] w-full bg-zinc-850"></div>
+
+                {{-- Botões de Ação Alinhados Abaixo --}}
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                    {{-- Botão Clientes Suspensos --}}
+                    <a href="{{ route('admin.clientes.suspensos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-red-950/50 bg-red-950/10 text-red-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-900 hover:text-white flex items-center justify-center gap-1.5">
+                        <i class="la la-user-slash text-base"></i> Clientes Suspensos
                     </a>
-                    <a href="{{ route('admin.servicos.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
-                        Serviço
-                    </a> -->
-                    <a href="{{ route('admin.faturamento') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
-                         Faturamento
+
+                    {{-- Botão Relatório Mensal --}}
+                    <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
+                        <i class="la la-chart-bar text-base"></i> Relatório Mensal
+                    </a>
+
+                    {{-- Botão Faturamento --}}
+                    <a href="{{ route('admin.faturamento') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-zinc-800 bg-zinc-900/50 text-zinc-300 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-zinc-800 hover:text-white flex items-center justify-center gap-1.5">
+                        <i class="la la-wallet text-base"></i> Faturamento
                     </a>
                 </div>
+
             </div>
         </div>
     @endif
 
-    {{-- NOVO FILTRO DE HISTÓRICO COM FORMATO BR (Inserido Abaixo do Header) --}}
+    {{-- FILTRO DE HISTÓRICO COM FORMATO BR --}}
     <section class="w-full bg-zinc-950/40 border-b border-zinc-900/60 py-6 px-4 md:px-10">
         <div class="max-w-6xl w-full mx-auto">
             <form id="filtroHistoricoForm" action="{{ route('admin.painel') }}" method="GET" onsubmit="prepararEnvioData(event)" class="card-glass p-5 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 items-end border border-zinc-800/60">
@@ -81,13 +91,11 @@
                     <div class="relative">
                         <i class="la la-calendar absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-base"></i>
                         
-                        {{-- Input visível formatado usando máscara simples via JS --}}
                         @php
                             $dataExibicao = request('data_manual') ? \Carbon\Carbon::parse(request('data_manual'))->format('d/m/Y') : '';
                         @endphp
                         <input type="text" id="input_data_br" value="{{ $dataExibicao }}" placeholder="Ex: 25/12/2024" maxlength="10" oninput="mascaraData(this)" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-9 pr-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none transition-all">
                         
-                        {{-- Input oculto que leva o valor em formato Y-m-d padrão para o Controller do Laravel --}}
                         <input type="hidden" id="hidden_data_manual" name="data_manual" value="{{ request('data_manual') }}">
                     </div>
                 </div>
@@ -118,7 +126,6 @@
                 <p class="text-sm text-zinc-500 mt-1">Selecione o dia abaixo para visualizar as clientes agendadas.</p>
             </div>
             
-            {{-- Contador Total das Duas Semanas --}}
             <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-2.5 flex items-center gap-3 self-end sm:self-center">
                 <div class="bg-pink-500/10 p-2 rounded-lg text-neon">
                     <i class="la la-calendar-check text-xl"></i>
@@ -132,7 +139,6 @@
 
         {{-- FILTRO DE DIAS OTIMIZADO --}}
         @php
-            // Movemos o array de tradução para fora do loop (roda apenas 1 vez)
             $diasSemanaPtBr = [
                 'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
                 'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
@@ -154,11 +160,10 @@
                         $isDomingo = $dataBotao->isSunday();
                     @endphp
                     
-                    {{-- Se for domingo, adicionamos pointer-events-none para evitar cliques desnecessários --}}
                     <label class="cursor-pointer {{ $isDomingo ? 'pointer-events-none' : '' }}">
                         <input type="radio" name="data_escolhida" value="{{ $stringData }}" class="hidden peer" 
                             {{ $isCheck ? 'checked' : '' }}
-                            {{ $isDomingo ? 'disabled' : '' }} {{-- Desativa o input se for domingo --}}
+                            {{ $isDomingo ? 'disabled' : '' }}
                             onchange="this.form.submit();">
                         
                         <div class="flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all 
@@ -228,6 +233,7 @@
                             <div class="absolute top-0 left-0 w-1 h-full 
                                 {{ $agendamento->status === 'confirmado' ? 'bg-pink-500' : '' }}
                                 {{ $agendamento->status === 'concluido' ? 'bg-emerald-500' : '' }}
+                                {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500' : '' }}
                                 {{ $agendamento->status === 'cancelado' ? 'bg-zinc-600' : '' }}
                             "></div>
                             
@@ -241,6 +247,7 @@
                                     <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider
                                         {{ $agendamento->status === 'confirmado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : '' }}
                                         {{ $agendamento->status === 'concluido' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : '' }}
+                                        {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
                                         {{ $agendamento->status === 'cancelado' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : '' }}
                                     ">
                                         {{ $agendamento->status }}
@@ -271,13 +278,22 @@
 
                             <div class="mt-4 pt-3 border-t border-zinc-900/80">
                                 @if($agendamento->status === 'confirmado')
-                                    <div class="grid grid-cols-3 gap-2">
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                         {{-- Botão Concluir --}}
                                         <form action="{{ route('admin.agendamento.concluir', $agendamento->id) }}" method="POST" onsubmit="confirmarPagamento(event, this)">
                                             @csrf
                                             <button type="submit" class="w-full text-center bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-400 hover:text-white py-2 rounded-xl text-xs font-semibold transition" title="Concluir Serviço">
                                                 <i class="la la-check text-base block"></i>
                                                 <span class="text-[9px] uppercase tracking-tighter">Concluir</span>
+                                            </button>
+                                        </form>
+
+                                        {{-- Botão Não Compareceu --}}
+                                        <form action="{{ route('admin.agendamento.faltou', $agendamento->id) }}" method="POST" onsubmit="confirmarFalta(event, this)">
+                                            @csrf
+                                            <button type="submit" class="w-full text-center bg-amber-600/20 hover:bg-amber-600 border border-amber-500/30 text-amber-400 hover:text-white py-2 rounded-xl text-xs font-semibold transition" title="Cliente Não Compareceu">
+                                                <i class="la la-user-times text-base block"></i>
+                                                <span class="text-[9px] uppercase tracking-tighter">Faltou</span>
                                             </button>
                                         </form>
 
@@ -307,6 +323,11 @@
                                         <div class="text-center text-[11px] text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 rounded-xl py-1.5 flex items-center justify-center gap-1.5">
                                             <i class="la la-money-bill text-sm"></i>
                                             <span>Pago via: <strong>{{ $agendamento->forma_pagamento ?? 'Não informada' }}</strong></span>
+                                        </div>
+                                    @elseif($agendamento->status === 'nao_compareceu')
+                                        <div class="text-center text-[11px] text-amber-400 bg-amber-500/5 border border-amber-500/10 rounded-xl py-1.5 flex items-center justify-center gap-1.5">
+                                            <i class="la la-user-times text-sm"></i>
+                                            <span>Não Compareceu</span>
                                         </div>
                                     @else
                                         <div class="text-center text-[11px] text-zinc-600 italic py-1">
@@ -415,6 +436,40 @@
                 if (result.isConfirmed && result.value) {
                     submeterComDadosAdicionais(form, {
                         'forma_pagamento': result.value.formaPagamento,
+                        'admin_password': result.value.senhaAdmin
+                    });
+                }
+            });
+        }
+
+        function confirmarFalta(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Marcar como Não Compareceu?',
+                text: "O horário constará como falta no sistema. Confirme com a senha master:",
+                icon: 'warning',
+                html: `
+                    <div class="text-left mt-3">
+                        <label class="block text-xs uppercase text-zinc-400 font-semibold mb-1">Senha Master (Admin)</label>
+                        <input type="password" id="swal-falta-senha" placeholder="Digite sua senha de login" class="w-full bg-zinc-900 border border-zinc-800 text-white rounded-xl p-2.5 text-sm focus:border-pink-500 focus:outline-none">
+                    </div>
+                `,
+                showCancelButton: true,
+                background: '#121214',
+                color: '#e4e4e7',
+                confirmButtonColor: '#f59e0b', // Cor Amber (Laranja)
+                cancelButtonColor: '#27272a',
+                confirmButtonText: 'Confirmar Falta',
+                cancelButtonText: 'Voltar',
+                customClass: { popup: 'border border-zinc-800 rounded-3xl' },
+                preConfirm: () => {
+                    const senhaAdmin = document.getElementById('swal-falta-senha').value;
+                    if (!senhaAdmin) { Swal.showValidationMessage('A senha administrativa é obrigatória!'); return false; }
+                    return { senhaAdmin: senhaAdmin };
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    submeterComDadosAdicionais(form, {
                         'admin_password': result.value.senhaAdmin
                     });
                 }

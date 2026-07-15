@@ -133,7 +133,7 @@
                             </span>
                             <span class="flex items-center gap-1">
                                 <i class="la la-clock text-pink-400 text-sm"></i> 
-                                {{ \Carbon\Carbon::parse($agendamentoAtivo->data)->format('d/m/Y') }} às {{ \Carbon\Carbon::parse($agendamentoAtivo->hora_escolhida)->format('H:i') }}h
+                                {{ \Carbon\Carbon::parse($agendamentoAtivo->data_escolhida)->format('d/m/Y') }} às {{ \Carbon\Carbon::parse($agendamentoAtivo->hora_escolhida)->format('H:i') }}h
                             </span>
                         </p>
                     </div>
@@ -146,8 +146,8 @@
                         Confirmado
                     </span>
                     
-                    <a href="{{ route('cliente.agendamentos') }}" class="text-[11px] font-semibold text-zinc-400 hover:text-neon transition-all flex items-center gap-1 group">
-                        Gerenciar <i class="la la-angle-right transition-transform group-hover:translate-x-1"></i>
+                    <a href="{{ route('cliente.agendamentos') }}" class="bg-pink-500/10 text-neon font-bold text-xs px-3 py-1 rounded-full uppercase tracking-widest border border-pink-500/20">
+                        Ver Detalhes 
                     </a>
                 </div>
 

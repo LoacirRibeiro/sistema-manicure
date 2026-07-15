@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Agendamento;
 use App\Models\Bloqueio;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash; // Importação da Facade Hash adicionada de forma limpa
 
 class AgendamentoController extends Controller
 {
@@ -18,7 +20,9 @@ class AgendamentoController extends Controller
      */
     public function escolherHorario(Request $request)
     {
-        // Captura o ID do serviço e manicure vindos do clique no botão ou URL
+        $usuarioLogado = Auth::user();
+        $estaDeCastigo = $usuarioLogado && $usuarioLogado->bloqueado_ate && $usuarioLogado->bloqueado_ate->isFuture();
+
         $servicoSelecionadoId = $request->input('servico_id');
         $manicureSelecionadaId = $request->input('manicure_id');
 
@@ -28,7 +32,6 @@ class AgendamentoController extends Controller
         $estudioFechado = $carbonData->isSunday();
         $isSabado = $carbonData->isSaturday();
 
-        // --- LÓGICA PARA MAPEAR DIAS LOTADOS/BLOQUEADOS NAS PRÓXIMAS 2 SEMANAS ---
         $diasLotados = [];
         $hoje = Carbon::today();
 
@@ -36,12 +39,15 @@ class AgendamentoController extends Controller
             $dataVerificar = $hoje->copy()->addDays($i);
             $dataString = $dataVerificar->format('Y-m-d');
 
-            // Ignora domingo, pois já é fechado naturalmente
             if ($dataVerificar->isSunday()) {
                 continue;
             }
 
-            // Verifica se o administrador bloqueou o DIA INTEIRO na tabela de bloqueios
+            if ($estaDeCastigo) {
+                $diasLotados[] = $dataString;
+                continue;
+            }
+
             $diaBloqueadoTodo = Bloqueio::where('data', $dataString)
                 ->whereNull('horario_inicio')
                 ->exists();
@@ -51,31 +57,25 @@ class AgendamentoController extends Controller
                 continue; 
             }
 
-            // Define o limite de vagas baseado no dia da semana
             $limiteHorarios = 5; 
 
-            // Conta quantos agendamentos ativos existem nesse dia
             $qtdAgendados = Agendamento::where('data_escolhida', $dataString)
                 ->where('status', '!=', 'cancelado')
                 ->count();
 
-            // Se atingiu ou passou o limite, marca o dia como lotado
             if ($qtdAgendados >= $limiteHorarios) {
                 $diasLotados[] = $dataString;
             }
         }
-        // -------------------------------------------------------------
 
-        // Se o estúdio estiver fechado por ser domingo ou por um bloqueio completo do dia
         $diaBloqueadoTotalmente = Bloqueio::where('data', $dataSelecionada)->whereNull('horario_inicio')->exists();
 
-        if ($estudioFechado || $diaBloqueadoTotalmente) {
+        if ($estudioFechado || $diaBloqueadoTotalmente || $estaDeCastigo) {
             $horariosDisponiveis = collect(); 
             $servicos = Servico::all();
             $manicures = User::all(); 
             $estudioFechado = true; 
         } else {
-            // 1. Descobre quais horários já foram agendados para este dia específico, IGNORANDO os cancelados
             $horariosOcupados = Agendamento::where('data_escolhida', $dataSelecionada)
                 ->where('status', '!=', 'cancelado')
                 ->pluck('hora_escolhida')
@@ -84,45 +84,37 @@ class AgendamentoController extends Controller
                 })
                 ->toArray();
 
-            // 2. Define o grid de horários permitidos no dia
             $horasPermitidas = $isSabado 
                 ? ['08:00', '10:00', '12:00', '14:00', '16:00']
                 : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
-            // 3. Busca todos os horários que bateriam com o grid padrão
             $todosHorariosDoGrid = Horario::whereIn(DB::raw("DATE_FORMAT(hora, '%H:%i')"), $horasPermitidas)
                 ->orderBy('hora')
                 ->get();
 
-            // 4. Busca bloqueios parciais de horário para o dia selecionado
             $bloqueiosParciais = Bloqueio::where('data', $dataSelecionada)
                 ->whereNotNull('horario_inicio')
                 ->whereNotNull('horario_fim')
                 ->get();
 
-            // 5. Filtra a lista final removendo agendamentos E aplicando faixas de horários bloqueadas
             $horariosDisponiveis = $todosHorariosDoGrid->filter(function($item) use ($horariosOcupados, $bloqueiosParciais, $dataSelecionada) {
                 $horaFormatada = Carbon::parse($item->hora)->format('H:i');
 
-                // Se a data selecionada for HOJE, remove os horários que já passaram do minuto atual
                 if ($dataSelecionada === Carbon::today()->format('Y-m-d')) {
-                    $agora = Carbon::now('-03:00')->format('H:i'); // Força o fuso horário correto se necessário
+                    $agora = Carbon::now('-03:00')->format('H:i');
                     if ($horaFormatada <= $agora) {
-                        return false; // Se o horário já passou (ex: são 09:01 e o horário é 09:00), some da tela
+                        return false; 
                     }
                 }
 
-                // Critério A: Remove se já estiver ocupado por um agendamento de cliente
                 if (in_array($horaFormatada, $horariosOcupados)) {
                     return false;
                 }
 
-                // Critério B: Remove se estiver dentro de uma faixa de horário bloqueada pelo admin
                 foreach ($bloqueiosParciais as $bloqueio) {
                     $inicio = Carbon::parse($bloqueio->horario_inicio)->format('H:i');
                     $fim = Carbon::parse($bloqueio->horario_fim)->format('H:i');
 
-                    // Se a hora do grid cair dentro da janela de bloqueio (inclusive no limite de início)
                     if ($horaFormatada >= $inicio && $horaFormatada < $fim) {
                         return false; 
                     }
@@ -146,7 +138,8 @@ class AgendamentoController extends Controller
             'diasLotados',
             'servicoSelecionadoId',
             'servicoSelecionado',
-            'manicureSelecionadaId'
+            'manicureSelecionadaId',
+            'estaDeCastigo'
         ));
     }
 
@@ -155,6 +148,11 @@ class AgendamentoController extends Controller
      */
     public function salvarAgendamento(Request $request)
     {
+        $usuarioLogado = Auth::user();
+        if ($usuarioLogado && $usuarioLogado->bloqueado_ate && $usuarioLogado->bloqueado_ate->isFuture()) {
+            return redirect()->back()->withErrors(['punicao' => 'Seu perfil está temporariamente impedido de realizar agendamentos.']);
+        }
+
         $dadosValidados = $request->validate([
             'cliente_nome'     => 'required|string|max:255',
             'cliente_whatsapp' => 'nullable|string',
@@ -164,12 +162,10 @@ class AgendamentoController extends Controller
             'hora_escolhida'   => 'required',
         ]);
 
-        // Segunda Camada de Segurança: Evita burlar se alguém inspecionar o HTML
         $horaFormatada = Carbon::parse($dadosValidados['hora_escolhida'])->format('H:i');
         
         $estaBloqueado = Bloqueio::where('data', $dadosValidados['data_escolhida'])
             ->where(function($query) use ($horaFormatada) {
-                // Bloqueio do dia inteiro OU horário dentro da faixa bloqueada
                 $query->whereNull('horario_inicio')
                       ->orWhere(function($q) use ($horaFormatada) {
                           $q->where('horario_inicio', '<=', $horaFormatada)
@@ -189,6 +185,7 @@ class AgendamentoController extends Controller
             'data_escolhida'   => $dadosValidados['data_escolhida'],
             'hora_escolhida'   => $dadosValidados['hora_escolhida'],
             'status'           => 'confirmado',
+            'user_id'          => $usuarioLogado ? $usuarioLogado->id : null,
         ]);
 
         return redirect()->route('home.index')->with('sucesso', 'Seu agendamento foi realizado com sucesso!');
@@ -196,14 +193,180 @@ class AgendamentoController extends Controller
 
     public function meusAgendamentos()
     {
-        // Busca os agendamentos pelo nome do cliente logado
         $agendamentos = Agendamento::where('cliente_nome', auth()->user()->name)
             ->with(['servico', 'manicure'])
             ->orderBy('data_escolhida', 'desc')
             ->orderBy('hora_escolhida', 'desc')
             ->get();
 
-        // Retorna a view onde o cliente poderá ver o histórico/status dos seus agendamentos
         return view('cliente.agendamentos', compact('agendamentos'));
+    }
+
+    public function clienteCancela($id)
+    {
+        $agendamento = Agendamento::findOrFail($id);
+
+        if ($agendamento->cliente_nome !== auth()->user()->name) {
+            return redirect()->back()->with('error', 'Ação não autorizada.');
+        }
+
+        $agendamento->update([
+            'status' => 'cancelado'
+        ]);
+
+        return redirect()->back()->with('success', 'Agendamento cancelado com sucesso!');
+    }
+
+    public function concluir(Request $request, $id)
+    {
+        $request->validate([
+            'admin_password' => 'required',
+        ]);
+
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return redirect()->back()->with('erro', 'Senha incorreta! O atendimento não foi concluído.');
+        }
+
+        $agendamento = Agendamento::findOrFail($id);
+        $agendamento->update([
+            'status' => 'concluido',
+            'forma_pagamento' => $request->input('forma_pagamento', 'Não Informado')
+        ]);
+
+        return redirect()->back()->with('sucesso', 'Serviço concluído e pagamento registrado com sucesso!');
+    }
+
+    public function cancelar(Request $request, $id)
+    {
+        $request->validate([
+            'admin_password' => 'required',
+        ]);
+
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return redirect()->back()->with('erro', 'Senha incorreta! O atendimento não foi concluído.');
+        }
+
+        $agendamento = Agendamento::findOrFail($id);
+        $agendamento->update(['status' => 'cancelado']);
+
+        return redirect()->back()->with('sucesso', 'Agendamento cancelado.');
+    }
+
+    public function processarRemarcacao(Request $request, $id)
+    {
+        $request->validate([
+            'admin_password' => 'required',
+            'nova_data'      => 'required|date',
+            'nova_hora'      => 'required',
+        ]);
+
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return redirect()->back()->with('erro', 'Senha administrativa incorreta! A remarcação não foi realizada.');
+        }
+
+        $agendamento = Agendamento::findOrFail($id);
+
+        $agendamento->update([
+            'data_escolhida' => $request->nova_data,
+            'hora_escolhida' => $request->nova_hora,
+            'status'         => 'confirmado'
+        ]);
+
+        return redirect()->route('admin.painel', ['data_escolhida' => $request->nova_data])
+            ->with('sucesso', 'Agendamento remarcado com sucesso!');
+    }
+
+    /**
+     * UNIFICADO: Registra falta com senha do administrador e roda a lógica de punição silenciosa de 60 dias
+     */
+    public function marcarFalta(Request $request, $id)
+    {
+        // 1. Validação da senha mestre do admin
+        $request->validate([
+            'admin_password' => 'required',
+        ]);
+
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return redirect()->back()->with('erro', 'Senha master inválida.');
+        }
+
+        // 2. Altera o status do agendamento para falta
+        $agendamento = Agendamento::findOrFail($id);
+        $agendamento->update([
+            'status' => 'nao_compareceu'
+        ]);
+
+        // 3. Roda a verificação de histórico de faltas consecutivas do cliente
+        $usuarioId = $agendamento->user_id;
+        $usuario = null;
+
+        if ($usuarioId) {
+            $usuario = User::find($usuarioId);
+        } else {
+            $usuario = User::where('name', $agendamento->cliente_nome)->first();
+        }
+
+        if ($usuario) {
+            // Busca os últimos 2 agendamentos resolvidos (concluidos ou faltas)
+            $ultimosAgendamentos = Agendamento::where(function($query) use ($usuario) {
+                    $query->where('user_id', $usuario->id)
+                          ->orWhere('cliente_nome', $usuario->name);
+                })
+                ->whereIn('status', ['concluido', 'nao_compareceu'])
+                ->orderBy('data_escolhida', 'desc')
+                ->orderBy('hora_escolhida', 'desc')
+                ->take(2)
+                ->get();
+
+            // Se existirem exatamente 2 registros e AMBOS forem falta ('nao_compareceu')
+            if ($ultimosAgendamentos->count() === 2) {
+                $primeiroStatus = $ultimosAgendamentos->get(0)->status;
+                $segundoStatus = $ultimosAgendamentos->get(1)->status;
+
+                if ($primeiroStatus === 'nao_compareceu' && $segundoStatus === 'nao_compareceu') {
+                    // Aplica o "castigo" de 60 dias silenciosos a partir de agora
+                    $usuario->bloqueado_ate = Carbon::now()->addDays(60);
+                    $usuario->save();
+                }
+            }
+        }
+
+        return redirect()->back()->with('sucesso', 'Falta registrada e histórico analisado com sucesso!');
+    }
+
+    /**
+     * Exibe a listagem de clientes que estão atualmente suspensas (de castigo)
+     */
+    public function clientesSuspensos()
+    {
+        $clientes = User::whereNotNull('bloqueado_ate')
+            ->where('bloqueado_ate', '>', Carbon::now())
+            ->orderBy('bloqueado_ate', 'asc')
+            ->get();
+
+        return view('admin.clientes_suspensos', compact('clientes'));
+    }
+
+    /**
+     * Desbloqueia a cliente limpando o campo 'bloqueado_ate' antes do prazo de 60 dias terminar
+     */
+    public function desbloquearCliente(Request $request, $id)
+    {
+        // 1. Valida se a senha administrativa foi enviada
+        $request->validate([
+            'admin_password' => 'required',
+        ]);
+
+        // 2. Valida se a senha confere com a do admin logado
+        if (!Hash::check($request->admin_password, auth()->user()->password)) {
+            return redirect()->back()->with('erro', 'Senha master inválida! A cliente não foi desbloqueada.');
+        }
+
+        // 3. Remove o castigo limpando o bloqueio
+        $cliente = User::findOrFail($id);
+        $cliente->bloqueado_ate = null;
+        $cliente->save();
+
+        return redirect()->back()->with('sucesso', "O agendamento online de {$cliente->name} foi liberado com sucesso!");
     }
 }

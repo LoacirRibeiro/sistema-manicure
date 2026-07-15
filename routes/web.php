@@ -55,9 +55,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/painel', [AdminController::class, 'index'])->name('admin.painel');
     
     // Ações de Agendamentos
-    Route::post('/agendamento/{id}/concluir', [AdminController::class, 'concluir'])->name('admin.agendamento.concluir');
-    Route::post('/agendamento/{id}/cancelar', [AdminController::class, 'cancelar'])->name('admin.agendamento.cancelar');
-    Route::post('/agendamento/{id}/remarcar', [AdminController::class, 'processarRemarcacao'])->name('admin.agendamento.processarRemarcacao');
+    Route::post('/agendamento/{id}/concluir', [AgendamentoController::class, 'concluir'])->name('admin.agendamento.concluir');
+    Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelar'])->name('admin.agendamento.cancelar');
+    Route::post('/agendamento/{id}/remarcar', [AgendamentoController::class, 'processarRemarcacao'])->name('admin.agendamento.processarRemarcacao');
 
     // Faturamento Financeiro
     Route::get('/faturamento', [AdminController::class, 'faturamento'])->name('admin.faturamento');
@@ -79,36 +79,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::put('/configuracao', [ConfiguracaoController::class, 'updateLanding'])->name('admin.landing.update');
 
 
-    Route::get('/gerar-meu-backup-secreto', function () {
-    $tables = DB::select('SHOW TABLES');
-    $dbName = env('DB_DATABASE');
-    $key = "Tables_in_" . $dbName;
+    Route::put('/meus-agendamentos/{id}/cancelar', [AgendamentoController::class, 'clienteCancela'])
+    ->name('cliente.agendamentos.cancelar');
+
+    Route::post('/agendamento/{id}/faltou', [AgendamentoController::class, 'marcarFalta'])->name('admin.agendamento.faltou');
+
+    Route::get('/relatorio-mensal', [AdminController::class, 'relatorio'])->name('admin.relatorio');
+
+    // Tela que lista as clientes suspensas
+    Route::get('/clientes-suspensos', [AgendamentoController::class, 'clientesSuspensos'])->name('admin.clientes.suspensos');
     
-    $sqlDump = "";
-    
-    foreach ($tables as $table) {
-        $tableName = $table->$key;
-        
-        // Estrutura da Tabela
-        $createTable = DB::select("SHOW CREATE TABLE {$tableName}");
-        $sqlDump .= "\n\n" . $createTable[0]->{'Create Table'} . ";\n\n";
-        
-        // Dados da Tabela
-        $rows = DB::select("SELECT * FROM {$tableName}");
-        foreach ($rows as $row) {
-            $rowArray = (array)$row;
-            $keys = array_keys($rowArray);
-            $values = array_map(function($value) {
-                if (is_null($value)) return 'NULL';
-                return "'" . addslashes($value) . "'";
-            }, array_values($rowArray));
-            
-            $sqlDump .= "INSERT INTO {$tableName} (" . implode(', ', $keys) . ") VALUES (" . implode(', ', $values) . ");\n";
-        }
-    }
-    
-    return response($sqlDump)
-        ->header('Content-Type', 'application/sql')
-        ->header('Content-Disposition', 'attachment; filename="backup_railway.sql"');
-});
+    // Ação para remover o castigo antecipadamente
+    Route::post('/clientes/{id}/desbloquear', [AgendamentoController::class, 'desbloquearCliente'])->name('admin.clientes.desbloquear');
 });

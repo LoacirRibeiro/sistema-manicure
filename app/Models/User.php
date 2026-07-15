@@ -24,6 +24,10 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+    //Bloqueio de clienres com duas fatas consecuticas
+    protected $casts = [
+    'bloqueado_ate' => 'datetime',
+    ];
 
     protected function casts(): array
     {

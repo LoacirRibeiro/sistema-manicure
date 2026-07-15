@@ -114,72 +114,7 @@ class AdminController extends Controller
         return view('admin.painel', compact('agendamentos', 'dataSelecionada', 'totalDuasSemanas', 'diasLotados'));
     }
 
-    public function concluir(Request $request, $id)
-    {
-        // 1. Valida se a senha foi enviada
-        $request->validate([
-            'admin_password' => 'required',
-        ]);
-
-        // 2. Verifica se a senha informada bate com a do admin logado
-        if (!Hash::check($request->admin_password, auth()->user()->password)) {
-            return redirect()->back()->with('erro', 'Senha incorreta! O atendimento não foi concluído.');
-        }
-
-        // 3. Encontra o agendamento e atualiza usando ->input()
-        $agendamento = Agendamento::findOrFail($id);
-        $agendamento->update([
-            'status' => 'concluido',
-            'forma_pagamento' => $request->input('forma_pagamento', 'Não Informado')
-        ]);
-
-        return redirect()->back()->with('sucesso', 'Serviço concluído e pagamento registrado com sucesso!');
-    }
-
-    public function cancelar(Request $request, $id)
-    {
-        // 1. Valida se a senha foi enviada
-        $request->validate([
-            'admin_password' => 'required',
-        ]);
-
-        // 2. Verifica se a senha informada bate com a do admin logado
-        if (!Hash::check($request->admin_password, auth()->user()->password)) {
-            return redirect()->back()->with('erro', 'Senha incorreta! O atendimento não foi concluído.');
-        }
-        $agendamento = Agendamento::findOrFail($id);
-        $agendamento->update(['status' => 'cancelado',]);
-
-        return redirect()->back()->with('sucesso', 'Agendamento cancelado.');
-    }
-
-    public function processarRemarcacao(Request $request, $id)
-    {
-        // 1. Valida a senha do admin logado e os novos dados do horário
-        $request->validate([
-            'admin_password' => 'required',
-            'nova_data'      => 'required|date',
-            'nova_hora'      => 'required',
-        ]);
-
-        // Verificar se a senha informada bate com a do admin atual
-        if (!Hash::check($request->admin_password, auth()->user()->password)) {
-            return redirect()->back()->with('erro', 'Senha administrativa incorreta! A remarcação não foi realizada.');
-        }
-
-        // 2. Encontra o agendamento antigo
-        $agendamento = Agendamento::findOrFail($id);
-
-        // 3. Atualiza com a nova data e horário (o horário antigo fica vago automaticamente)
-        $agendamento->update([
-            'data_escolhida' => $request->nova_data,
-            'hora_escolhida' => $request->nova_hora,
-            'status'         => 'confirmado' // Garante que volta a ficar confirmado se estivesse diferente
-        ]);
-
-        return redirect()->route('admin.painel', ['data_escolhida' => $request->nova_data])
-            ->with('sucesso', 'Agendamento remarcado com sucesso!');
-    }
+   
 
     public function faturamento(Request $request)
     {
@@ -365,5 +300,33 @@ class AdminController extends Controller
         $servico->update($dados);
 
         return redirect()->back()->with('sucesso', 'Serviço updated com sucesso!');
+    }
+
+    public function relatorio(Request $request)
+    {
+        // Obtém o período selecionado (Formato padrão de input month: YYYY-MM) ou define o mês atual
+        $periodoSelecionado = $request->input('periodo', Carbon::now()->format('Y-m'));
+        
+        // Parseia a data para pegar o início e fim do mês correspondente
+        $dataInicio = Carbon::parse($periodoSelecionado)->startOfMonth()->toDateString();
+        $dataFim = Carbon::parse($periodoSelecionado)->endOfMonth()->toDateString();
+
+        // Busca todos os agendamentos do mês escolhido carregando as relações necessárias
+        $agendamentos = Agendamento::with(['servico', 'manicure'])
+            ->whereBetween('data_escolhida', [$dataInicio, $dataFim])
+            ->orderBy('data_escolhida', 'desc')
+            ->orderBy('hora_escolhida', 'asc')
+            ->get();
+
+        // Contabiliza cada status para popular os cards informativos
+        $contagem = [
+            'concluidos'     => $agendamentos->where('status', 'concluido')->count(),
+            'nao_compareceu' => $agendamentos->where('status', 'nao_compareceu')->count(),
+            'cancelados'     => $agendamentos->where('status', 'cancelado')->count(),
+            // Caso use um status de controle ou flag para remarcados, ajuste aqui:
+            'remarcados'     => $agendamentos->where('status', 'confirmado')->whereNotNull('remarcado_id')->count() // Exemplo de contagem
+        ];
+
+        return view('admin.relatorio', compact('agendamentos', 'contagem', 'periodoSelecionado'));
     }
 }

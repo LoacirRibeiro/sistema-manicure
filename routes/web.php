@@ -31,7 +31,7 @@ Route::post('/esqueceu-senha', [AuthController::class, 'enviarLinkRecuperacao'])
 
 
 // ==========================================
-// ROTAS PROTEGIDAS (Apenas usuários logados)
+// ROTAS PROTEGIDAS (Apenas usuários logados - Clientes e Admins)
 // ==========================================
 Route::middleware(['auth'])->group(function () {
     
@@ -42,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/agendamento/horarios', [AgendamentoController::class, 'escolherHorario'])->name('agendamento.horarios');
     Route::post('/agendamento/salvar', [AgendamentoController::class, 'salvarAgendamento'])->name('agendamento.salvar');
     Route::get('/meus-agendamentos', [AgendamentoController::class, 'meusAgendamentos'])->name('cliente.agendamentos');
+    
+    // ROTA CORRIGIDA: Agora acessível para o cliente logado sem precisar ser Admin!
+    Route::put('/meus-agendamentos/{id}/cancelar', [AgendamentoController::class, 'clienteCancela'])->name('cliente.agendamentos.cancelar');
 
 });
 
@@ -54,7 +57,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Painel Principal
     Route::get('/painel', [AdminController::class, 'index'])->name('admin.painel');
     
-    // Ações de Agendamentos
+    // Ações de Agendamentos Administrativas
     Route::post('/agendamento/{id}/concluir', [AgendamentoController::class, 'concluir'])->name('admin.agendamento.concluir');
     Route::post('/agendamento/{id}/cancelar', [AgendamentoController::class, 'cancelar'])->name('admin.agendamento.cancelar');
     Route::post('/agendamento/{id}/remarcar', [AgendamentoController::class, 'processarRemarcacao'])->name('admin.agendamento.processarRemarcacao');
@@ -74,21 +77,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::put('/servicos/{id}', [AdminController::class, 'atualizarServico'])->name('admin.servicos.update');
     Route::delete('/servicos/{id}', [AdminController::class, 'deletarServico'])->name('admin.servicos.destroy');
 
-    // Certifique-se de que estão dentro do grupo admin ou adicione o prefixo manualmente:
+    // Configurações da Landing Page
     Route::get('/configuracao', [ConfiguracaoController::class, 'editLanding'])->name('admin.landing.edit');
     Route::put('/configuracao', [ConfiguracaoController::class, 'updateLanding'])->name('admin.landing.update');
 
-
-    Route::put('/meus-agendamentos/{id}/cancelar', [AgendamentoController::class, 'clienteCancela'])
-    ->name('cliente.agendamentos.cancelar');
-
+    // Controle de Faltas e Relatórios
     Route::post('/agendamento/{id}/faltou', [AgendamentoController::class, 'marcarFalta'])->name('admin.agendamento.faltou');
-
     Route::get('/relatorio-mensal', [AdminController::class, 'relatorio'])->name('admin.relatorio');
 
-    // Tela que lista as clientes suspensas
+    // Tela que lista as clientes suspensas e Ação de Desbloqueio
     Route::get('/clientes-suspensos', [AgendamentoController::class, 'clientesSuspensos'])->name('admin.clientes.suspensos');
-    
-    // Ação para remover o castigo antecipadamente
     Route::post('/clientes/{id}/desbloquear', [AgendamentoController::class, 'desbloquearCliente'])->name('admin.clientes.desbloquear');
+
+    // Gráficos Administrativos
+    Route::get('/admin/graficos', [AgendamentoController::class, 'graficosMensais'])->name('admin.graficos');
 });

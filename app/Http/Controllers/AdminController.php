@@ -60,6 +60,11 @@ class AdminController extends Controller
             ->where('status', '!=', 'cancelado')
             ->count();
 
+        $totalEfetuadosMes = Agendamento::where('status', 'concluido')
+            ->whereMonth('data_escolhida', Carbon::now()->month)
+            ->whereYear('data_escolhida', Carbon::now()->year)
+            ->count();
+
         // 🔥 3. Lógica para calcular quais dos próximos 14 dias estão lotados ou bloqueados (Mantida Intacta)
         $diasLotados = [];
         $limiteHorarios = 5; 
@@ -111,7 +116,7 @@ class AdminController extends Controller
             }
         }
 
-        return view('admin.painel', compact('agendamentos', 'dataSelecionada', 'totalDuasSemanas', 'diasLotados'));
+        return view('admin.painel', compact('agendamentos', 'dataSelecionada', 'totalDuasSemanas', 'diasLotados', 'totalEfetuadosMes'));
     }
 
    

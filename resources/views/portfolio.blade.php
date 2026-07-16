@@ -24,6 +24,11 @@
         <a href="{{ route('agendamento.horarios') }}" class="bg-neon text-white text-xs font-bold px-5 py-3 rounded-xl uppercase tracking-widest transition transform hover:scale-105 active:scale-95">Agendar Horário</a>
     </header>
 
+    <a href="{{ route('home.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
+                Home
+            </a>
+        </div>
+
     {{-- Conteúdo Principal --}}
     <main class="py-12 px-4 max-w-6xl mx-auto w-full flex-grow">
         

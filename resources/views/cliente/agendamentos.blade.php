@@ -22,7 +22,7 @@
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-2xl font-bold">Meus <span class="text-neon">Agendamentos</span></h1>
             <a href="{{ route('home.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
-                Voltar para Home
+                Home
             </a>
         </div>
 
@@ -48,14 +48,27 @@
                         
                         {{-- AÇÃO DE CANCELAR --}}
                         @if($agendamento->status == 'confirmado')
+                            @php
+                                // Cria um objeto Carbon unindo a data e a hora do agendamento
+                                $dataHoraAgendamento = \Carbon\Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
+                                // Verifica se a diferença em horas até o agendamento é de pelo menos 24 horas
+                                $podeCancelar = \Carbon\Carbon::now()->diffInHours($dataHoraAgendamento, false) >= 24;
+                            @endphp
+
                             <div class="w-full md:w-auto flex justify-end">
-                                <form action="{{ route('cliente.agendamentos.cancelar', $agendamento->id) }}" method="POST" class="form-cancelar">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit" class="text-xs font-semibold uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-red-500 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-1">
-                                        <i class="la la-trash-alt text-base"></i> Cancelar Agendamento
-                                    </button>
-                                </form>
+                                @if($podeCancelar)
+                                    <form action="{{ route('cliente.agendamentos.cancelar', $agendamento->id) }}" method="POST" class="form-cancelar">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="text-xs font-semibold uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-red-500 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-1">
+                                            <i class="la la-trash-alt text-base"></i> Cancelar Agendamento
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-[10px] uppercase font-semibold text-zinc-500 border border-zinc-800 bg-zinc-900/40 px-3 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed" title="Cancelamentos só são permitidos com 24h de antecedência.">
+                                        <i class="la la-info-circle text-base text-zinc-600"></i> Bloqueado p/ cancelamento
+                                    </span>
+                                @endif
                             </div>
                         @endif
                     </div>

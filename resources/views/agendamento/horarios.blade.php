@@ -25,7 +25,10 @@
         @if(request('remarcar_id'))
             <a href="{{ route('admin.painel') }}" class="text-pink-400 hover:text-pink-300 transition text-sm font-semibold uppercase tracking-widest">Voltar ao Painel</a>
         @else
-            <a href="{{ route('home.index') }}" class="text-zinc-400 hover:text-white transition text-sm font-semibold uppercase tracking-widest"> Voltar</a>
+            <a href="{{ route('home.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
+                Home
+            </a>
+        </div>
         @endif
     </header>
 
@@ -95,7 +98,6 @@
                     <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400">Selecione o Dia desejado</label>
                     <div class="grid grid-cols-7 gap-2">
                         @php
-                            // Tradução otimizada carregada fora do loop
                             $diasSemanaPtBr = [
                                 'Sun' => 'Dom', 'Mon' => 'Seg', 'Tue' => 'Ter', 
                                 'Wed' => 'Qua', 'Thu' => 'Qui', 'Fri' => 'Sex', 'Sat' => 'Sáb'
@@ -209,6 +211,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Alerta de Erro de Autenticação / Genéricos
         @if(session('erro'))
             Swal.fire({
                 title: 'Erro de Autenticação',
@@ -216,10 +219,12 @@
                 icon: 'error',
                 background: '#121214',
                 color: '#e4e4e7',
-                confirmButtonColor: '#ef4444'
+                confirmButtonColor: '#ef4444',
+                customClass: { popup: 'border border-zinc-800 rounded-3xl' }
             });
         @endif
 
+        // Tratamento da Lógica de Remarcação (Administrativo)
         const urlParams = new URLSearchParams(window.location.search);
         const inputRemarcar = document.querySelector('input[name="remarcar_id"]');
         const remarcarId = urlParams.get('remarcar_id') || (inputRemarcar ? inputRemarcar.value : null);
@@ -253,7 +258,8 @@
                             icon: 'warning',
                             background: '#121214',
                             color: '#e4e4e7',
-                            confirmButtonColor: '#FF007F'
+                            confirmButtonColor: '#FF007F',
+                            customClass: { popup: 'border border-zinc-800 rounded-3xl' }
                         });
                         return;
                     }
@@ -309,6 +315,39 @@
                 });
             }
         }
+
+        // Executa alertas de validação normais e de duplicidade após o DOM estar pronto
+        document.addEventListener('DOMContentLoaded', function () {
+            // 1. Alerta de agendamento duplicado (Regra de 1 ativo por cliente)
+            @if(session('error_duplicado'))
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atenção, NailsLover!',
+                    text: "{{ session('error_duplicado') }}",
+                    confirmButtonColor: '#FF007F', 
+                    background: '#121212', 
+                    color: '#e4e4e7', 
+                    customClass: {
+                        popup: 'border border-zinc-800 rounded-3xl'
+                    }
+                });
+            @endif
+
+            // 2. Alerta para erros de validação gerais do Laravel (ex: faltou preencher algo)
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ops! Algo deu errado',
+                    text: "{{ $errors->first() }}",
+                    confirmButtonColor: '#FF007F',
+                    background: '#121212',
+                    color: '#e4e4e7',
+                    customClass: {
+                        popup: 'border border-zinc-800 rounded-3xl'
+                    }
+                });
+            @endif
+        });
     </script>
 </body>
 </html>

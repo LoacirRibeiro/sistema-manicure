@@ -146,9 +146,14 @@ class AgendamentoController extends Controller
     /**
      * Processa o formulário de agendamento (Ação do Botão Confirmar)
      */
+    /**
+     * Processa o formulário de agendamento (Ação do Botão Confirmar)
+     */
     public function salvarAgendamento(Request $request)
     {
         $usuarioLogado = Auth::user();
+        
+        // 1. Verifica se o usuário está suspenso (de castigo)
         if ($usuarioLogado && $usuarioLogado->bloqueado_ate && $usuarioLogado->bloqueado_ate->isFuture()) {
             return redirect()->back()->withErrors(['punicao' => 'Seu perfil está temporariamente impedido de realizar agendamentos.']);
         }
@@ -162,6 +167,31 @@ class AgendamentoController extends Controller
             'hora_escolhida'   => 'required',
         ]);
 
+        // 2. REGRA DE RESTRIÇÃO: Apenas 1 agendamento ativo por cliente
+        // Verifica se o cliente já possui um agendamento pendente ou confirmado
+        $agendamentoAtivo = Agendamento::whereIn('status', ['confirmado', 'pendente']) // Ajuste os status de agendamento ativo se necessário
+            ->where(function($query) use ($usuarioLogado, $dadosValidados) {
+                if ($usuarioLogado) {
+                    // Se estiver logado, busca pelo ID de usuário ou pelo nome exato do perfil
+                    $query->where('user_id', $usuarioLogado->id)
+                          ->orWhere('cliente_nome', $usuarioLogado->name);
+                } else {
+                    // Se for agendamento sem login, busca pelo nome fornecido no input
+                    $query->where('cliente_nome', $dadosValidados['cliente_nome']);
+                }
+            })
+            ->first();
+
+        if ($agendamentoAtivo) {
+            $dataAtiva = Carbon::parse($agendamentoAtivo->data_escolhida)->format('d/m/Y');
+            $horaAtiva = Carbon::parse($agendamentoAtivo->hora_escolhida)->format('H:i');
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['cliente_nome' => "Você já possui um agendamento ativo para o dia {$dataAtiva} às {$horaAtiva}h. Conclua ou cancele o atual antes de marcar um novo."]);
+        }
+
+        // 3. Validação de Bloqueio Administrativo de Horário
         $horaFormatada = Carbon::parse($dadosValidados['hora_escolhida'])->format('H:i');
         
         $estaBloqueado = Bloqueio::where('data', $dadosValidados['data_escolhida'])
@@ -177,6 +207,7 @@ class AgendamentoController extends Controller
             return redirect()->back()->withErrors(['hora_escolhida' => 'Desculpe, este horário acabou de ser bloqueado administrativamente.']);
         }
 
+        // 4. Criação do Agendamento
         Agendamento::create([
             'cliente_nome'     => $dadosValidados['cliente_nome'],
             'cliente_whatsapp' => $dadosValidados['cliente_whatsapp'] ?? 'Não informado',
@@ -206,10 +237,22 @@ class AgendamentoController extends Controller
     {
         $agendamento = Agendamento::findOrFail($id);
 
+        // 1. Segurança: Garante que o agendamento pertence ao usuário logado
         if ($agendamento->cliente_nome !== auth()->user()->name) {
             return redirect()->back()->with('error', 'Ação não autorizada.');
         }
 
+        // 2. Regra de Negócio: Impede cancelamento com menos de 24h de antecedência
+        // Mesclamos a data e a hora do agendamento para criar um objeto Carbon completo
+        $dataHoraAgendamento = Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
+
+        // diffInHours com o segundo parâmetro como 'false' garante que se o horário 
+        // já tiver passado ou estiver muito em cima, o valor retornado será menor que 24
+        if (Carbon::now()->diffInHours($dataHoraAgendamento, false) < 24) {
+            return redirect()->back()->with('error', 'O cancelamento só é permitido com no mínimo 24 horas de antecedência. Entre em contato conosco para suporte.');
+        }
+
+        // 3. Executa o cancelamento caso passe em todas as validações
         $agendamento->update([
             'status' => 'cancelado'
         ]);
@@ -368,5 +411,40 @@ class AgendamentoController extends Controller
         $cliente->save();
 
         return redirect()->back()->with('sucesso', "O agendamento online de {$cliente->name} foi liberado com sucesso!");
+    }
+
+    public function graficosMensais()
+    {
+        $inicioMes = Carbon::now()->startOfMonth();
+        $fimMes = Carbon::now()->endOfMonth();
+
+        // 1. Métricas de Status (Gráfico 1)
+        $dadosStatus = DB::table('agendamentos')
+            ->select('status', DB::raw('count(*) as total'))
+            ->whereBetween('data_escolhida', [$inicioMes, $fimMes])
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+
+        $statusPadrao = ['concluido' => 0, 'cancelado' => 0, 'nao_compareceu' => 0, 'remarcado' => 0];
+        $metricas = array_merge($statusPadrao, $dadosStatus);
+
+        // 2. Métricas Financeiras (Gráfico 2)
+        // Soma o valor de todos os agendamentos com status 'concluido' no mês
+        $faturamentoTotal = DB::table('agendamentos')
+        ->join('servicos', 'agendamentos.servico_id', '=', 'servicos.id') // Junção das tabelas
+        ->where('agendamentos.status', 'concluido')
+        ->whereBetween('agendamentos.data_escolhida', [$inicioMes, $fimMes])
+        ->sum('servicos.preco'); // Certifique-se de que o nome da coluna de preço é 'valor'
+
+        // Soma as despesas registradas no mês (ajuste de acordo com sua tabela de despesas)
+        $despesasTotal = DB::table('despesas') // Substitua pelo nome correto da sua tabela de despesas
+            ->whereBetween('data_vencimento', [$inicioMes, $fimMes]) // ou 'created_at'
+            ->sum('valor');
+
+        // Calcula o Lucro Líquido
+        $lucroLiquido = max(0, $faturamentoTotal - $despesasTotal);
+
+        return view('admin.graficos', compact('metricas', 'faturamentoTotal', 'despesasTotal', 'lucroLiquido'));
     }
 }

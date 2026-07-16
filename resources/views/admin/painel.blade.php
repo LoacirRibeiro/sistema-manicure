@@ -30,6 +30,14 @@
         </div>
     </header>
 
+    <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+        <div class="flex justify-start mt-4 ml-4">
+            <span class="text-xs uppercase tracking-wider bg-red-950/50 px-3 py-1 rounded-full text-red-400 border border-red-900/50">
+                Painel de Controle
+            </span>
+        </div>
+    </div>
+
     {{-- Container com o botão de adicionar serviços (Apenas visível para Admin) --}}
     @if(auth()->check() && auth()->user()->hasRole('admin'))
         <div class="max-w-6xl mx-auto mb-8 px-6">
@@ -59,6 +67,10 @@
                     {{-- Botão Relatório Mensal --}}
                     <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
                         <i class="la la-chart-bar text-base"></i> Relatório Mensal
+                    </a>
+
+                    <a href="{{ route('admin.graficos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-cyan-500 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center gap-1.5">
+                        <i class="la la-chart-pie text-base"></i> Desempenho Mensal
                     </a>
 
                     {{-- Botão Faturamento --}}
@@ -103,7 +115,7 @@
                 {{-- Botões de Ação --}}
                 <div class="flex gap-2">
                     <button type="submit" class="flex-grow bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950/20">
-                        <i class="la la-history text-sm"></i> Pesquisar Realizados
+                        <i class="la la-history text-sm"></i> Pesquisar
                     </button>
                     
                     @if(request('nome') || request('data_manual'))
@@ -120,20 +132,34 @@
     <main class="flex-grow p-4 md:p-10 max-w-6xl w-full mx-auto space-y-8">
         
         {{-- Título e Contadores Globais --}}
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-900 pb-4">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-zinc-900 pb-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Controle Diário de Horários</h1>
                 <p class="text-sm text-zinc-500 mt-1">Selecione o dia abaixo para visualizar as clientes agendadas.</p>
             </div>
             
-            <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-2.5 flex items-center gap-3 self-end sm:self-center">
-                <div class="bg-pink-500/10 p-2 rounded-lg text-neon">
-                    <i class="la la-calendar-check text-xl"></i>
+            <div class="flex flex-wrap gap-3 w-full lg:w-auto justify-end">
+                
+                <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-2.5 flex items-center gap-3 min-w-[170px]">
+                    <div class="bg-emerald-500/10 p-2 rounded-lg text-emerald-400">
+                        <i class="la la-check-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Efetuados (Mês)</span>
+                        <span class="text-lg font-black text-white leading-none">{{ $totalEfetuadosMes }}</span>
+                    </div>  
                 </div>
-                <div>
-                    <span class="block text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Total (2 Semanas)</span>
-                    <span class="text-lg font-black text-white leading-none">{{ $totalDuasSemanas }}</span>
-                </div>  
+
+                <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl px-4 py-2.5 flex items-center gap-3 min-w-[170px]">
+                    <div class="bg-pink-500/10 p-2 rounded-lg text-neon">
+                        <i class="la la-calendar-check text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">Total (Agendados)</span>
+                        <span class="text-lg font-black text-white leading-none">{{ $totalDuasSemanas }}</span>
+                    </div>  
+                </div>
+
             </div>
         </div>
 

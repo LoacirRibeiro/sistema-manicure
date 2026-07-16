@@ -34,7 +34,17 @@
         @else
             <div class="space-y-4">
                 @foreach($agendamentos as $agendamento)
-                    <div class="card-glass p-6 rounded-2xl border-l-4 @if($agendamento->status == 'confirmado') border-l-pink-500 @elseif($agendamento->status == 'concluido') border-l-emerald-500 @else border-l-zinc-700 @endif flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    @php
+                        // Define a cor da borda de forma limpa no PHP
+                        $borderColor = 'border-l-zinc-700';
+                        if ($agendamento->status == 'confirmado') {
+                            $borderColor = 'border-l-pink-500';
+                        } elseif ($agendamento->status == 'concluido') {
+                            $borderColor = 'border-l-emerald-500';
+                        }
+                    @endphp
+
+                    <div class="card-glass p-6 rounded-2xl border-l-4 {{ $borderColor }} flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">
                                 {{ $agendamento->status }}
@@ -49,9 +59,7 @@
                         {{-- AÇÃO DE CANCELAR --}}
                         @if($agendamento->status == 'confirmado')
                             @php
-                                // Cria um objeto Carbon unindo a data e a hora do agendamento
                                 $dataHoraAgendamento = \Carbon\Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
-                                // Verifica se a diferença em horas até o agendamento é de pelo menos 24 horas
                                 $podeCancelar = \Carbon\Carbon::now()->diffInHours($dataHoraAgendamento, false) >= 24;
                             @endphp
 

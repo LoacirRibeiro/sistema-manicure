@@ -42,8 +42,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/agendamento/horarios', [AgendamentoController::class, 'escolherHorario'])->name('agendamento.horarios');
     Route::post('/agendamento/salvar', [AgendamentoController::class, 'salvarAgendamento'])->name('agendamento.salvar');
     Route::get('/meus-agendamentos', [AgendamentoController::class, 'meusAgendamentos'])->name('cliente.agendamentos');
-    
-    // ROTA CORRIGIDA: Agora acessível para o cliente logado sem precisar ser Admin!
     Route::put('/meus-agendamentos/{id}/cancelar', [AgendamentoController::class, 'clienteCancela'])->name('cliente.agendamentos.cancelar');
 
 });

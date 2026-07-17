@@ -21,7 +21,7 @@ class HomeController extends Controller
         if (auth()->check()) {
             $agendamentoAtivo = Agendamento::where('cliente_nome', auth()->user()->name)
                 // Esconde se estiver concluído ou cancelado usando os termos exatos do seu banco
-                ->whereNotIn('status', ['concluido', 'cancelado']) 
+                ->whereNotIn('status', ['concluido', 'cancelado', 'nao_compareceu']) 
                 ->where('data_escolhida', '>=', Carbon::today()) 
                 ->with(['servico', 'manicure'])
                 ->orderBy('data_escolhida', 'asc')

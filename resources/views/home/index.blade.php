@@ -293,7 +293,7 @@
                 <span class="text-neon font-bold tracking-widest uppercase text-xs">Fale Conosco</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 {{-- WhatsApp --}}
                 <a href="https://wa.me/5563992185324" target="_blank" class="card-glass p-6 rounded-2xl flex items-start gap-4 transition duration-300 hover:border-pink-500/40 group">
                     <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-neon group-hover:bg-neon group-hover:text-white transition duration-300 text-2xl">
@@ -306,6 +306,18 @@
                     </div>
                 </a>
 
+                {{-- NOVO: Instagram --}}
+                <a href="https://www.instagram.com/marcielle_nail?utm_source=qr&igsh=enF1YzhydDN6OGRk" target="_blank" class="card-glass p-6 rounded-2xl flex items-start gap-4 transition duration-300 hover:border-pink-500/40 group">
+                    <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-neon group-hover:bg-neon group-hover:text-white transition duration-300 text-2xl">
+                        <i class="la la-instagram"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wider">Instagram</h4>
+                        <p class="text-xs text-zinc-400 mt-1">@marcielle_nail</p>
+                        <span class="text-[10px] text-pink-400 font-semibold mt-2 block group-hover:underline">Siga nosso perfil →</span>
+                    </div>
+                </a>
+
                 {{-- Horários --}}
                 <div class="card-glass p-6 rounded-2xl flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-neon text-2xl">
@@ -314,7 +326,7 @@
                     <div>
                         <h4 class="text-sm font-bold text-white uppercase tracking-wider">Horários</h4>
                         <p class="text-xs text-zinc-400 mt-1">Segunda a Terça : 09h às 17h</p>
-                        <p class="text-xs text-zinc-400 mt-1">sábado : 08h às 16h</p>
+                        <p class="text-xs text-zinc-400 mt-1">Sábado : 08h às 16h</p>
                         <p class="text-[10px] text-zinc-500 mt-1">Atendimento exclusivo com hora marcada.</p>
                     </div>
                 </div>

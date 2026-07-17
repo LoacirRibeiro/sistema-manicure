@@ -19,6 +19,20 @@ Route::get('/rodar-seeder-manicure', function () {
     }
 });
 
+Route::get('/instalar-banco-manicure', function () {
+    try {
+        // Limpa o banco e roda as migrations na nuvem
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        
+        // Alimenta o banco com os seus seeders (serviços, etc)
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        
+        return "Banco de dados configurado e populado com sucesso no Railway!";
+    } catch (\Exception $e) {
+        return "Erro ao configurar o banco: " . $e->getMessage();
+    }
+});
+
 // ==========================================
 // ROTAS PÚBLICAS (Acessíveis por qualquer visitante)
 // ==========================================

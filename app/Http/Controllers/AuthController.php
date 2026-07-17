@@ -36,6 +36,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'telefone' => 'required|string',
+            'data_nascimento' => 'required|date',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -43,6 +44,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'telefone' => $request->telefone,
+            'data_nascimento' => $request->data_nascimento,
             'password' => $request->password,
         ]);
 

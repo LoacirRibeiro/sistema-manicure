@@ -332,13 +332,13 @@
                 </div>
 
                 {{-- Endereço --}}
-                <a href="#" target="_blank" class="card-glass p-6 rounded-2xl flex items-start gap-4 transition duration-300 hover:border-pink-500/40 group">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode('Alameda 19 Arso 131, 57, Palmas, 77019-704, TO') }}" target="_blank" class="card-glass p-6 rounded-2xl flex items-start gap-4 transition duration-300 hover:border-pink-500/40 group">
                     <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-neon group-hover:bg-neon group-hover:text-white transition duration-300 text-2xl">
                         <i class="la la-map-marker"></i>
                     </div>
                     <div>
                         <h4 class="text-sm font-bold text-white uppercase tracking-wider">Nosso Espaço</h4>
-                        <p class="text-xs text-zinc-400 mt-1 line-clamp-2">Av. Principal, 1234 - Sala 102, Centro</p>
+                        <p class="text-xs text-zinc-400 mt-1 line-clamp-2">Alameda 19 Arso 131, 57, Palmas, 77019-704, TO, BR</p>
                         <span class="text-[10px] text-pink-400 font-semibold mt-2 block group-hover:underline">Ver no mapa →</span>
                     </div>
                 </a>

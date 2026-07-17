@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - NailsStudio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;600;800&family=Playfair+Display:wght=700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #0f0f0f; }
@@ -56,10 +56,18 @@
                 <input type="text" id="telefone" name="telefone" value="{{ old('telefone') }}" placeholder="(00) 99999-0000" maxlength="15" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition">
             </div>
             
-            {{-- NOVO CAMPO: DATA DE NASCIMENTO --}}
+            {{-- DATA DE NASCIMENTO (Otimizado Regional) --}}
             <div>
                 <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400 mb-1">Data de Nascimento</label>
-                <input type="date" id="data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition [color-scheme:dark]">
+                <input type="text" 
+                    id="data_nascimento_pt" 
+                    placeholder="DD/MM/AAAA" 
+                    maxlength="10" 
+                    required 
+                    class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition">
+                
+                {{-- Campo oculto para enviar ao Laravel no formato correto que o banco espera (YYYY-MM-DD) --}}
+                <input type="hidden" id="data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}">
             </div>
 
             <div>
@@ -107,7 +115,6 @@
         document.getElementById('formCadastro').addEventListener('submit', function(e) {
             const erroContainer = document.getElementById('erro-container');
             
-            // Força a limpeza visual inicial
             erroContainer.classList.add('hidden');
             erroContainer.innerText = '';
 
@@ -123,28 +130,22 @@
 
             let mensagemErro = '';
 
-            // Validação de Campos Vazios Básica (Contorna bugs do required nativo)
             if (!nome || !email || !telefone || !dataNascimento || !senha || !confirmacao) {
                 mensagemErro = 'Por favor, preencha todos os campos do formulário.';
             }
-            // Validação de Nome Completo
             else if (!nome.includes(' ') || nome.split(' ').filter(p => p.length > 0).length < 2) {
                 mensagemErro = 'Por favor, insira o seu nome e sobrenome completo.';
             }
-            // Validação simples de formato de e-mail
             else if (!linearEmailValid(email)) {
                 mensagemErro = 'Por favor, insira um endereço de e-mail válido.';
             }
-            // Validação do Telefone
             else if (telefone.length < 11) {
                 mensagemErro = 'O número de telefone deve conter o DDD mais os 9 dígitos (ex: (11) 99999-9999).';
             }
-            // Comparação das Senhas
             else if (senha !== confirmacao) {
                 mensagemErro = 'A confirmação de senha não coincide com a senha informada.';
             }
 
-            // Se encontrou algum erro, interrompe o envio imediatamente e exibe a mensagem
             if (mensagemErro !== '') {
                 e.preventDefault();
                 erroContainer.innerText = mensagemErro;
@@ -153,10 +154,42 @@
             }
         });
 
-        // Função auxiliar para validar e-mail sem travar o submit nativo
         function linearEmailValid(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
+        }
+
+        // --- 4. MÁSCARA EM TEMPO REAL PARA A DATA DE NASCIMENTO (DD/MM/AAAA) ---
+        const inputDataPt = document.getElementById('data_nascimento_pt');
+        const inputDataHidden = document.getElementById('data_nascimento');
+
+        inputDataPt.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+            if (value.length > 8) value = value.slice(0, 8);
+            
+            if (value.length > 4) {
+                value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+            } else if (value.length > 2) {
+                value = `${value.slice(0, 2)}/${value.slice(2)}`;
+            }
+            
+            e.target.value = value;
+
+            // Se a data estiver completa (10 caracteres: DD/MM/AAAA), atualiza o campo oculto para o formato do banco (YYYY-MM-DD)
+            if (value.length === 10) {
+                const partes = value.split('/');
+                inputDataHidden.value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            } else {
+                inputDataHidden.value = ''; // Reseta se estiver incompleto
+            }
+        });
+
+        // Recuperar valor antigo do Laravel caso dê erro de validação ao voltar para a tela
+        if (inputDataHidden.value) {
+            const partes = inputDataHidden.value.split('-');
+            if (partes.length === 3) {
+                inputDataPt.value = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
         }
     </script>
 </body>

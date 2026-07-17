@@ -9,6 +9,14 @@ class ServicoSeeder extends Seeder
 {
     public function run(): void
     {
+        // Desativa a checagem de chaves estrangeiras temporariamente para evitar erros de relacionamento
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Limpa totalmente a tabela de serviços antes de inserir
+        Servico::truncate(); 
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $servicos = [
             [
                 'nome' => 'Alongamento',

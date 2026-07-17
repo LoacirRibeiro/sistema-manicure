@@ -61,7 +61,8 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-                PDO::ATTR_TIMEOUT => 5, 
+                PDO::ATTR_TIMEOUT => 30, // Mudou de 5 para 30
+                PDO::ATTR_EMULATE_PREPARES => true, // Ajuda a manter a conexão aberta em instabilidades
             ]) : [],
         ],
 

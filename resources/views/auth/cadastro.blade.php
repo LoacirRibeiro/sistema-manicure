@@ -55,6 +55,13 @@
                 <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400 mb-1">Telefone / WhatsApp</label>
                 <input type="text" id="telefone" name="telefone" value="{{ old('telefone') }}" placeholder="(00) 99999-0000" maxlength="15" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition">
             </div>
+            
+            {{-- NOVO CAMPO: DATA DE NASCIMENTO --}}
+            <div>
+                <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400 mb-1">Data de Nascimento</label>
+                <input type="date" id="data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition [color-scheme:dark]">
+            </div>
+
             <div>
                 <label class="block text-xs uppercase tracking-widest font-semibold text-zinc-400 mb-1">Senha</label>
                 <input type="password" id="password" name="password" required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-neon transition">
@@ -110,13 +117,14 @@
             
             const email = document.getElementById('email').value.trim();
             const telefone = inputTelefone.value.replace(/\D/g, '');
+            const dataNascimento = document.getElementById('data_nascimento').value;
             const senha = document.getElementById('password').value;
             const confirmacao = document.getElementById('password_confirmation').value;
 
             let mensagemErro = '';
 
             // Validação de Campos Vazios Básica (Contorna bugs do required nativo)
-            if (!nome || !email || !telefone || !senha || !confirmacao) {
+            if (!nome || !email || !telefone || !dataNascimento || !senha || !confirmacao) {
                 mensagemErro = 'Por favor, preencha todos os campos do formulário.';
             }
             // Validação de Nome Completo

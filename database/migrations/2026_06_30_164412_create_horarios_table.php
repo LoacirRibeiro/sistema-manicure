@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('horarios', function (Blueprint $table) {
             $table->id();
             $table->time('hora'); // Vai salvar formato 08:00:00
+             $table->string('dia_tipo')->default('semana');
             $table->timestamps();
         });
     }

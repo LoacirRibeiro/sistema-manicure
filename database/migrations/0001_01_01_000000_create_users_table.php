@@ -16,8 +16,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('telefone'); // 🔥 Seu campo do WhatsApp mantido aqui
+            $table->string('telefone'); 
             $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('bloqueado_ate')->nullable();
+            $table->date('data_nascimento')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

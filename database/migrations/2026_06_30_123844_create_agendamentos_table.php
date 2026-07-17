@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('cliente_nome');
             $table->string('cliente_whatsapp')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('servico_id')->constrained('servicos')->onDelete('cascade');
             $table->foreignId('manicure_id')->constrained('users')->onDelete('cascade'); // 🔥 Adicionado link com a manicure (users)
-            $table->date('data_escolhida'); // 📅 Apenas a data (Y-m-d)
-            $table->time('hora_escolhida'); // ⏰ Apenas a hora (H:i)
+            $table->date('data_escolhida'); 
+            $table->time('hora_escolhida'); 
             $table->string('status')->default('confirmado');
+            $table->string('forma_pagamento')->nullable();
             $table->text('observacoes')->nullable();
             $table->timestamps();
         });

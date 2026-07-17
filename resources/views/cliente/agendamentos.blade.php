@@ -38,6 +38,7 @@
                         // Configuração padrão de cores (Fallback caso venha outro status)
                         $borderColor = 'border-l-zinc-700';
                         $badgeClass = 'bg-zinc-800 text-zinc-300';
+                        $statusText = $agendamento->status;
 
                         // Cores específicas para cada status
                         if ($agendamento->status == 'confirmado') {
@@ -49,13 +50,18 @@
                         } elseif ($agendamento->status == 'cancelado') {
                             $borderColor = 'border-l-red-500/40';
                             $badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/20';
+                        } elseif ($agendamento->status == 'nao_compareceu') {
+                            // Estilização para o caso de Falta / Não Compareceu
+                            $borderColor = 'border-l-amber-500';
+                            $badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                            $statusText = 'não compareceu';
                         }
                     @endphp
 
                     <div class="card-glass p-6 rounded-2xl border-l-4 {{ $borderColor }} flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <span class="text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-lg {{ $badgeClass }}">
-                                {{ $agendamento->status }}
+                                {{ $statusText }}
                             </span>
                             <h3 class="text-lg font-semibold text-white mt-3">{{ $agendamento->servico->nome ?? 'Procedimento' }}</h3>
                             <p class="text-xs text-zinc-400 mt-1">

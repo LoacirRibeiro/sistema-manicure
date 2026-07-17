@@ -249,7 +249,7 @@
                 <span class="text-neon font-bold tracking-widest uppercase text-xs">Quem Somos</span>
                 <h2 class="text-3xl md:text-4xl font-title text-white">Arte, Cuidado e Autoestima em Cada Detalhe</h2>
                 <p class="text-sm text-zinc-400 leading-relaxed">
-                    No <span class="text-zinc-200 font-semibold">NailsStudio</span>, não fazemos apenas unhas; nós criamos experiências de beleza personalizadas. Nossa equipe é composta por profissionais especialistas em alongamentos em fibra, nail art feitas à mão livre e tratamentos premium para a saúde das suas mãos.
+                    No <span class="text-zinc-200 font-semibold">NailsStudio</span>, não fazemos apenas unhas; nós criamos experiências de beleza personalizadas. Nossa equipe é composta por profissionais especialistas em alongamentos, nail art feitas à mão livre e tratamentos premium para a saúde das suas mãos.
                 </p>
                 <p class="text-sm text-zinc-400 leading-relaxed">
                     Utilizamos materiais de altíssima qualidade, rigorosamente esterilizados, garantindo um resultado impecável, duradouro e totalmente seguro para você brilhar.

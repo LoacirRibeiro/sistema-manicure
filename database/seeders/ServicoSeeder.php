@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Servico;
+use Illuminate\Support\Facades\DB;
 
 class ServicoSeeder extends Seeder
 {

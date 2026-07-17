@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             ServicoSeeder::class,
             RoleSeeder::class,     // Cria as roles: admin, manicure, etc.
             HorarioSeeder::class,  // Cria a grade de horários
-            ServicoSeeder::class, 
         ]);
 
         // 2. Cria o usuário administrador se ele não existir

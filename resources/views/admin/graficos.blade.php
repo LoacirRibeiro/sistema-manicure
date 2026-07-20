@@ -38,62 +38,70 @@
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto mb-6 px-6">
-        <form action="{{ route('admin.graficos') }}" method="GET" class="card-glass p-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/10 flex flex-col sm:flex-row items-center gap-4">
-            
-            <div class="w-full sm:w-1/3">
-                <label for="filtro_mes" class="block text-[10px] uppercase tracking-widest text-zinc-500 font-semibold mb-1.5">Mês de Análise</label>
-                <select 
-                    id="filtro_mes" 
-                    name="mes" 
-                    class="w-full bg-zinc-950 border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-pink-500/50 transition-all cursor-pointer"
-                >
-                    @php
-                        $meses = [
-                            '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março', '04' => 'Abril',
-                            '05' => 'Maio', '06' => 'Junho', '07' => 'Julho', '08' => 'Agosto',
-                            '09' => 'Setembro', '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
-                        ];
-                        $mesSelecionado = request('mes', date('m'));
-                    @endphp
-                    @foreach($meses as $num => $nome)
-                        <option value="{{ $num }}" {{ $mesSelecionado == $num ? 'selected' : '' }}>
-                            {{ $nome }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+    <div class="w-full max-w-6xl mx-auto mt-6 mb-8 px-4 sm:px-">
+        <form action="{{ route('admin.graficos') }}" method="GET" class="card-glass p-5 md:p-6 rounded-3xl border border-zinc-800/80 bg-zinc-900/10 flex flex-col gap-5 shadow-xl">
 
-            <div class="w-full sm:w-1/4">
-                <label for="filtro_ano" class="block text-[10px] uppercase tracking-widest text-zinc-500 font-semibold mb-1.5">Ano</label>
-                <select 
-                    id="filtro_ano" 
-                    name="ano" 
-                    class="w-full bg-zinc-950 border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:border-pink-500/50 transition-all cursor-pointer"
-                >
-                    @php
-                        $anoAtual = date('Y');
-                        $anoSelecionado = request('ano', $anoAtual);
-                    @endphp
-                    {{-- Gera opções do ano atual até 3 anos atrás --}}
-                    @for($i = $anoAtual; $i >= $anoAtual - 3; $i--)
-                        <option value="{{ $i }}" {{ $anoSelecionado == $i ? 'selected' : '' }}>
-                            {{ $i }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
-
-            <div class="flex items-end gap-2 w-full sm:w-auto pt-5 sm:pt-0 sm:ml-auto">
-                <button type="submit" class="w-full sm:w-auto bg-pink-500/10 hover:bg-neon border border-pink-500/30 text-neon hover:text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5">
-                    <i class="la la-filter text-base"></i> Filtrar
-                </button>
+            {{-- Campos do Filtro --}}
+            <div class="flex flex-col sm:flex-row items-end gap-4">
                 
-                @if(request('mes') || request('ano'))
-                    <a href="{{ route('admin.graficos') }}" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center">
-                        Limpar
-                    </a>
-                @endif
+                {{-- Mês --}}
+                <div class="w-full sm:flex-1">
+                    <label for="filtro_mes" class="block text-[10px] uppercase tracking-widest text-zinc-400 font-semibold mb-1.5">Mês de Análise</label>
+                    <select 
+                        id="filtro_mes" 
+                        name="mes" 
+                        class="w-full bg-zinc-950 border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500/50 transition-all cursor-pointer"
+                    >
+                        @php
+                            $meses = [
+                                '01' => 'Janeiro', '02' => 'Fevereiro', '03' => 'Março', '04' => 'Abril',
+                                '05' => 'Maio', '06' => 'Junho', '07' => 'Julho', '08' => 'Agosto',
+                                '09' => 'Setembro', '10' => 'Outubro', '11' => 'Novembro', '12' => 'Dezembro'
+                            ];
+                            $mesSelecionado = request('mes', date('m'));
+                        @endphp
+                        @foreach($meses as $num => $nome)
+                            <option value="{{ $num }}" {{ $mesSelecionado == $num ? 'selected' : '' }}>
+                                {{ $nome }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Ano --}}
+                <div class="w-full sm:w-1/3">
+                    <label for="filtro_ano" class="block text-[10px] uppercase tracking-widest text-zinc-400 font-semibold mb-1.5">Ano</label>
+                    <select 
+                        id="filtro_ano" 
+                        name="ano" 
+                        class="w-full bg-zinc-950 border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500/50 transition-all cursor-pointer"
+                    >
+                        @php
+                            $anoAtual = date('Y');
+                            $anoSelecionado = request('ano', $anoAtual);
+                        @endphp
+                        @for($i = $anoAtual; $i >= $anoAtual - 3; $i--)
+                            <option value="{{ $i }}" {{ $anoSelecionado == $i ? 'selected' : '' }}>
+                                {{ $i }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                {{-- Botões de Ação --}}
+                <div class="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
+                    <button type="submit" class="w-full sm:w-auto bg-pink-500/10 hover:bg-neon border border-pink-500/30 text-neon hover:text-white px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <i class="la la-filter text-base"></i> Filtrar
+                    </button>
+                    
+                    @if(request('mes') || request('ano'))
+                        <a href="{{ route('admin.graficos') }}" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 flex items-center justify-center whitespace-nowrap" title="Limpar Filtro">
+                            <i class="la la-times text-base sm:mr-1"></i>
+                            <span class="hidden sm:inline">Limpar</span>
+                        </a>
+                    @endif
+                </div>
+
             </div>
 
         </form>

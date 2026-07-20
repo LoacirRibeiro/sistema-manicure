@@ -18,29 +18,52 @@
 <body class="text-zinc-200 min-h-screen flex flex-col justify-between">
 
     {{-- Header --}}
-    <header class="p-6 bg-zinc-950/80 border-b border-zinc-900 flex justify-between items-center backdrop-blur-md sticky top-0 z-50">
+    <header class="p-4 md:p-6 bg-zinc-950/80 border-b border-zinc-900 flex justify-between items-center backdrop-blur-md sticky top-0 z-50 gap-2">
+    
+        {{-- Logo --}}
         <div class="flex items-center gap-3">
-            <a href="#" class="text-xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></a>
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="text-sm text-zinc-400">Olá, <strong class="text-zinc-200">{{ auth()->user()->name }}</strong></span>
-            <a href="{{ route('home.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
-                Sair do Painel
+            <a href="#" class="text-lg md:text-xl font-black tracking-tighter uppercase whitespace-nowrap">
+                Nails<span class="text-neon">Studio</span>
             </a>
         </div>
+
+        {{-- Área do Usuário e Ação --}}
+        <div class="flex items-center gap-2 sm:gap-4">
+            
+            {{-- Lógica para Primeiro e Último Nome --}}
+            @php
+                $partesNome = explode(' ', trim(auth()->user()->name ?? ''));
+                $primeiroNome = $partesNome[0] ?? '';
+                $ultimoNome = count($partesNome) > 1 ? end($partesNome) : '';
+                $nomeExibicao = trim("$primeiroNome $ultimoNome");
+            @endphp
+
+            {{-- Nome do Usuário (Responsivo) --}}
+            <span class="text-xs sm:text-sm text-zinc-400 max-w-[120px] sm:max-w-none truncate">
+                <span class="hidden sm:inline">Olá, </span>
+                <strong class="text-zinc-200 font-semibold">{{ $nomeExibicao }}</strong>
+            </span>
+
+            {{-- Botão Sair --}}
+            <a href="{{ route('home.index') }}" class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5 whitespace-nowrap">
+                <span class="hidden sm:inline">Sair do Painel</span>
+                <span class="sm:hidden">Sair</span>
+            </a>
+        </div>
+
     </header>
 
     <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
         <div class="flex justify-start mt-4 ml-4">
             <span class="text-xs uppercase tracking-wider bg-red-950/50 px-3 py-1 rounded-full text-red-400 border border-red-900/50">
-                Painel de Controle
+                Painel de Controle 
             </span>
         </div>
     </div>
 
     {{-- Container com o botão de adicionar serviços (Apenas visível para Admin) --}}
     @if(auth()->check() && auth()->user()->hasRole('admin'))
-        <div class="max-w-6xl mx-auto mb-8 px-6">
+        <div class="max-w-6xl mx-auto mt-6 mb-8 px-4 sm:px-6">
             <div class="card-glass p-6 rounded-3xl flex flex-col gap-6 border border-zinc-800/80 bg-zinc-900/10">
                 
                 {{-- Bloco de Texto e Ícone --}}
@@ -70,10 +93,10 @@
                         <i class="la la-user-slash text-base"></i> Clientes Suspensos
                     </a> -->
 
-                    {{-- Botão Relatório Mensal --}}
+                    <!-- {{-- Botão Relatório Mensal --}}
                     <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
                         <i class="la la-chart-bar text-base"></i> Relatório Mensal
-                    </a>
+                    </a> -->
 
                     <a href="{{ route('admin.graficos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-cyan-500 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center gap-1.5">
                         <i class="la la-chart-pie text-base"></i> Desempenho Mensal

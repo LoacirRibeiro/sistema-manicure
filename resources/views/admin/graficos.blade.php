@@ -24,8 +24,8 @@
             <span class="text-xl font-black tracking-tighter uppercase">Nails<span class="text-neon">Studio</span></span>
         </div>
         <div>
-            <a href="{{ route('admin.painel') }}" class="text-xs uppercase tracking-wider bg-red-950/50 px-3 py-1 rounded-full text-red-400 border border-red-900/50">
-                <i class="la la-arrow-left"></i> Voltar ao Painel
+            <a href="{{ route('admin.painel') }}" class="w-full md:w-auto bg-pink-500/10 hover:bg-neon border border-pink-500/30 text-neon hover:text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap h-11">
+                Painel
             </a>
         </div>
     </header>

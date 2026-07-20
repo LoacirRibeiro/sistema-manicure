@@ -33,7 +33,7 @@
         </div>
         <div>
             <a href="{{ route('admin.painel') }}" class="w-full md:w-auto bg-pink-500/10 hover:bg-neon border border-pink-500/30 text-neon hover:text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap h-11">
-                <i class="la la-arrow-left text-base"></i> Painel Geral
+               Painel 
             </a>
         </div>
     </header>
@@ -42,27 +42,29 @@
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
         
         {{-- Título da Página e Ações --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i class="la la-users text-neon"></i> Gestão de Clientes
-                </h1>
-                <p class="text-xs text-zinc-400 mt-1">Acompanhe a atividade das clientes e realize novos agendamentos diretos.</p>
-            </div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i class="la la-users text-neon"></i> Gestão de Clientes
+        </h1>
+        <p class="text-xs text-zinc-400 mt-1">Acompanhe a atividade das clientes e realize novos agendamentos diretos.</p>
+    </div>
 
-            {{-- Botão Clientes Suspensos --}}
-            <div>
-                <a href="{{ route('admin.clientes.suspensos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-red-950/50 bg-red-950/10 text-red-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-900 hover:text-white flex items-center justify-center gap-1.5">
-                    <i class="la la-user-slash text-base"></i> Clientes Suspensos
-                </a> 
+    {{-- Botões de Ação (Lado a Lado no Mobile e Desktop) --}}
+    <div class="flex flex-row items-center gap-2.5 w-full sm:w-auto">
+        
+        {{-- Botão Clientes Suspensos --}}
+        <a href="{{ route('admin.clientes.suspensos') }}" class="flex-1 sm:flex-none text-[11px] sm:text-xs font-semibold uppercase tracking-wider border border-red-950/50 bg-red-950/10 text-red-400 px-3.5 sm:px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-900 hover:text-white flex items-center justify-center gap-1.5 text-center whitespace-nowrap">
+            <i class="la la-user-slash text-base"></i> Clientes Suspensos
+        </a> 
 
-                {{-- Botão Relatório Mensal --}}
-                    <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
-                        <i class="la la-chart-bar text-base"></i> Relatório Mensal
-                    </a>
-                
-            </div>
-        </div>
+        {{-- Botão Relatório Mensal --}}
+        <a href="{{ route('admin.relatorio') }}" class="flex-1 sm:flex-none text-[11px] sm:text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-3.5 sm:px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5 text-center whitespace-nowrap">
+            <i class="la la-chart-bar text-base"></i> Relatório Mensal
+        </a>
+        
+    </div>
+</div>
 
         {{-- CARDS DE MÉTRICAS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

@@ -43,7 +43,7 @@
         </div>
         <div>
             <a href="{{ route('admin.painel') }}" class="w-full md:w-auto bg-pink-500/10 hover:bg-neon border border-pink-500/30 text-neon hover:text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-1.5 whitespace-nowrap h-11">
-                <i class="la la-arrow-left"></i> Painel Geral
+                Painel
             </a>
         </div>
     </header>

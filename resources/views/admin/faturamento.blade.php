@@ -24,8 +24,7 @@
         </div>
         <div class="flex items-center gap-4">
             <a href="{{ route('admin.painel') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5 whitespace-nowrap">
-                <i class="la la-arrow-left text-sm"></i>
-                <span class="hidden sm:inline">Voltar ao Painel</span>
+                <span class="hidden sm:inline">Painel</span>
                 <span class="sm:hidden">Voltar</span>
             </a>
         </div>

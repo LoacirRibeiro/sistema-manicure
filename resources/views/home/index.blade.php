@@ -164,9 +164,9 @@
                 <h2 class="text-6xl md:text-8xl font-title mt-4 leading-tight">Suas unhas, <br> sua <span class="italic">assinatura.</span></h2>
                 <p class="mt-6 text-zinc-400 text-lg max-w-md">Especialista em técnicas avançadas de fibra de vidro e gel, unindo resistência e naturalidade para mulheres empoderadas.</p>
                 <div class="mt-10 flex flex-wrap gap-4">
-                    <a href="{{ route('portfolio') }}" class="flex items-center justify-center gap-2 border border-pink-500/30 bg-pink-500/10 text-neon px-8 py-4 rounded-xl hover:bg-pink-500/20 transition">
+                    <!-- <a href="{{ route('portfolio') }}" class="flex items-center justify-center gap-2 border border-pink-500/30 bg-pink-500/10 text-neon px-8 py-4 rounded-xl hover:bg-pink-500/20 transition">
                         Galeria
-                    </a>
+                    </a> -->
 
                     <a href="{{ route('cliente.agendamentos') }}" class="flex items-center justify-center gap-2 border border-pink-500/30 bg-pink-500/10 text-neon px-8 py-4 rounded-xl hover:bg-pink-500/20 transition">
                         Meus Horários

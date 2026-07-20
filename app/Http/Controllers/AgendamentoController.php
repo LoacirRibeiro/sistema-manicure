@@ -85,7 +85,7 @@ class AgendamentoController extends Controller
                 ->toArray();
 
             $horasPermitidas = $isSabado 
-                ? ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+                ? ['08:00', '10:00', '12:00', '14:00', '16:00']
                 : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
             $todosHorariosDoGrid = Horario::whereIn(DB::raw("DATE_FORMAT(hora, '%H:%i')"), $horasPermitidas)
@@ -143,9 +143,6 @@ class AgendamentoController extends Controller
         ));
     }
 
-    /**
-     * Processa o formulário de agendamento (Ação do Botão Confirmar)
-     */
     /**
      * Processa o formulário de agendamento (Ação do Botão Confirmar)
      */
@@ -252,6 +249,32 @@ class AgendamentoController extends Controller
         }
 
         return redirect()->route('home.index')->with('sucesso', 'Seu agendamento foi realizado com sucesso!');
+    }
+
+    public function meusAgendamentos()
+    {
+        $agendamentos = Agendamento::where('cliente_nome', auth()->user()->name)
+            ->with(['servico', 'manicure'])
+            ->orderBy('data_escolhida', 'desc')
+            ->orderBy('hora_escolhida', 'desc')
+            ->get();
+
+        return view('cliente.agendamentos', compact('agendamentos'));
+    }
+
+    public function clienteCancela($id)
+    {
+        $agendamento = Agendamento::findOrFail($id);
+
+        if ($agendamento->cliente_nome !== auth()->user()->name) {
+            return redirect()->back()->with('error', 'Ação não autorizada.');
+        }
+
+        $agendamento->update([
+            'status' => 'cancelado'
+        ]);
+
+        return redirect()->back()->with('success', 'Agendamento cancelado com sucesso!');
     }
 
     public function concluir(Request $request, $id)
@@ -440,19 +463,5 @@ class AgendamentoController extends Controller
         $lucroLiquido = max(0, $faturamentoTotal - $despesasTotal);
 
         return view('admin.graficos', compact('metricas', 'faturamentoTotal', 'despesasTotal', 'lucroLiquido'));
-    }
-
-    public function criarParaUsuario($userId)
-    {
-        // Busca a cliente pelo ID ou lança erro 404 se não existir
-        $cliente = User::findOrFail($userId);
-
-        // Salva temporariamente a cliente na sessão para o fluxo de agendamento saber quem é
-        session(['agendamento_cliente_id' => $cliente->id]);
-
-        // Redireciona o Admin para a tela de escolha de horários/serviços
-        // (Ajuste o nome da rota abaixo caso a sua tela de agendamento use outro nome, ex: 'agendamento.horarios')
-        return redirect()->route('agendamento.horarios')
-            ->with('success', "Iniciando agendamento para a cliente: {$cliente->name}");
     }
 }

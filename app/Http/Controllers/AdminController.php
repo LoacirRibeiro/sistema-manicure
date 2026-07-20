@@ -66,7 +66,22 @@ class AdminController extends Controller
             ->whereYear('data_escolhida', Carbon::now()->year)
             ->count();
 
-        // 🔥 3. Lógica para calcular quais dos próximos 14 dias estão lotados ou bloqueados (Mantida Intacta)
+        // 3. Métricas de Clientes para os Cards do Painel
+        $totalClientes = User::count();
+        
+        $novosEsteMes = User::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->count();
+
+        // Clientes ativas: que possuem pelo menos 1 agendamento nos últimos 90 dias
+        $totalAtivos = User::whereHas('agendamentos', function ($q) {
+            $q->where('data_escolhida', '>=', Carbon::now()->subDays(90)->format('Y-m-d'))
+            ->where('status', '!=', 'cancelado');
+        })->count();
+
+        $totalInativos = max(0, $totalClientes - $totalAtivos);
+
+        // 4. Lógica para calcular quais dos próximos 14 dias estão lotados ou bloqueados
         $diasLotados = [];
         $limiteHorarios = 5; 
 
@@ -93,7 +108,7 @@ class AdminController extends Controller
 
             $isSabado = $dataVerificar->isSaturday();
             $horasPermitidas = $isSabado 
-                ? ['08:00', '10:00', '12:00', '14:00', '16:00']
+                ? ['08:00', '10:00', '12:00', '14:00', '16:00', ['18:00']]
                 : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
             $totalHorariosPossiveis = count($horasPermitidas);
@@ -117,7 +132,17 @@ class AdminController extends Controller
             }
         }
 
-        return view('admin.painel', compact('agendamentos', 'dataSelecionada', 'totalDuasSemanas', 'diasLotados', 'totalEfetuadosMes'));
+        return view('admin.painel', compact(
+            'agendamentos', 
+            'dataSelecionada', 
+            'totalDuasSemanas', 
+            'diasLotados', 
+            'totalEfetuadosMes',
+            'totalClientes',
+            'novosEsteMes',
+            'totalAtivos',
+            'totalInativos'
+        ));
     }
 
    

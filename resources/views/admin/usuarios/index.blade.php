@@ -16,22 +16,11 @@
         .bg-neon { background-color: #FF007F; }
         .border-neon { border-color: #FF007F; }
         
-        /* Customização escura para o SweetAlert2 */
         .swal2-dark-modal {
             background: #121212 !important;
             border: 1px solid rgba(255, 255, 255, 0.05) !important;
             border-radius: 24px !important;
             color: #e4e4e7 !important;
-        }
-        .swal2-dark-input {
-            background: #1c1c1e !important;
-            border: 1px solid #2d2d30 !important;
-            color: #fff !important;
-            border-radius: 12px !important;
-        }
-        .swal2-dark-input:focus {
-            border-color: #FF007F !important;
-            box-shadow: 0 0 8px rgba(255, 0, 127, 0.4) !important;
         }
     </style>
 </head>
@@ -53,7 +42,7 @@
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
         
         {{-- Título da Página e Ações --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
                 <h1 class="text-2xl font-bold text-white flex items-center gap-2">
                     <i class="la la-users text-neon"></i> Gestão de Clientes
@@ -67,6 +56,55 @@
                     <i class="la la-user-slash text-base"></i> Clientes Suspensos
                 </a> 
             </div>
+        </div>
+
+        {{-- CARDS DE MÉTRICAS --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            
+            {{-- Card 1: Total de Clientes --}}
+            <div class="card-glass p-5 rounded-2xl flex items-center gap-4 border border-zinc-800/80 hover:border-pink-500/30 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 text-neon flex items-center justify-center text-2xl">
+                    <i class="la la-users"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 block">Total de Clientes</span>
+                    <span class="text-2xl font-bold text-white">{{ $totalClientes ?? $usuarios->total() }}</span>
+                </div>
+            </div>
+
+            {{-- Card 2: Clientes Ativos --}}
+            <div class="card-glass p-5 rounded-2xl flex items-center gap-4 border border-zinc-800/80 hover:border-emerald-500/30 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl">
+                    <i class="la la-user-check"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 block">Ativos (Últimos 3M)</span>
+                    <span class="text-2xl font-bold text-white">{{ $totalAtivos ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Card 3: Novos Este Mês --}}
+            <div class="card-glass p-5 rounded-2xl flex items-center gap-4 border border-zinc-800/80 hover:border-sky-500/30 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-2xl">
+                    <i class="la la-user-plus"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 block">Novos este Mês</span>
+                    <span class="text-2xl font-bold text-white">{{ $novosEsteMes ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Card 4: Inativos / Sem Recorrência --}}
+            <div class="card-glass p-5 rounded-2xl flex items-center gap-4 border border-zinc-800/80 hover:border-amber-500/30 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl">
+                    <i class="la la-user-clock"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400 block">Inativos (+3 Meses)</span>
+                    <span class="text-2xl font-bold text-white">{{ $totalInativos ?? 0 }}</span>
+                </div>
+            </div>
+
         </div>
 
         {{-- Filtro de Pesquisa de Cliente --}}
@@ -90,13 +128,6 @@
                 </div>
             </form>
         </div>
-
-        {{-- Mensagem de Sucesso (Flash) --}}
-        @if(session('success') || session('sucesso'))
-            <div class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm flex items-center gap-2">
-                <i class="la la-check-circle text-lg"></i> {{ session('success') ?? session('sucesso') }}
-            </div>
-        @endif
 
         {{-- Tabela de Usuários em Card Glass --}}
         <div class="card-glass rounded-3xl overflow-hidden shadow-2xl">
@@ -157,7 +188,7 @@
                 </table>
             </div>
 
-            {{-- Links de Paginação com preservação de query da busca --}}
+            {{-- Links de Paginação --}}
             @if($usuarios->hasPages())
                 <div class="p-4 bg-zinc-900/40 border-t border-zinc-800">
                     {{ $usuarios->appends(request()->query())->links() }}
@@ -171,5 +202,33 @@
         &copy; {{ date('Y') }} NailsStudio. Todos os direitos reservados.
     </footer>
 
+    {{-- JS E ALERTAS CONFIGURADOS --}}
+    <script>
+        @if(session('sucesso') || session('success'))
+            Swal.fire({
+                title: 'Sucesso!',
+                text: "{{ session('sucesso') ?? session('success') }}",
+                icon: 'success',
+                background: '#121214',
+                color: '#e4e4e7',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Ok',
+                customClass: { popup: 'border border-zinc-800 rounded-3xl' }
+            });
+        @endif
+
+        @if(session('erro') || session('error') || $errors->any())
+            Swal.fire({
+                title: 'Atenção!',
+                text: "{{ session('erro') ?? session('error') ?? $errors->first() }}",
+                icon: 'error',
+                background: '#121214',
+                color: '#e4e4e7',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Tentar Novamente',
+                customClass: { popup: 'border border-zinc-800 rounded-3xl' }
+            });
+        @endif
+    </script>
 </body>
 </html>

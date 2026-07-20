@@ -45,4 +45,9 @@ class User extends Authenticatable
     {
         return $this->hasRole('admin');
     }
+
+    public function agendamentos()
+    {
+        return $this->hasMany(Agendamento::class);
+    }
 }

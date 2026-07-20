@@ -113,4 +113,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // Gráficos Administrativos
     Route::get('/admin/graficos', [AgendamentoController::class, 'graficosMensais'])->name('admin.graficos');
+
+    // Listagem e gestão de usuários
+    Route::get('/usuarios', [AdminController::class, 'listarUsuarios'])->name('admin.usuarios.index');
+    Route::get('/agendamento/criar-para-usuario/{userId}', [AgendamentoController::class, 'criarParaUsuario'])->name('admin.agendamento.criarParaUsuario');
 });

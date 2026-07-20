@@ -7,6 +7,7 @@ use App\Models\Despesa;
 use App\Models\Servico;
 use App\Models\Bloqueio; 
 use App\Models\Configuracao;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -333,5 +334,23 @@ class AdminController extends Controller
         ];
 
         return view('admin.relatorio', compact('agendamentos', 'contagem', 'periodoSelecionado'));
+    }
+
+    public function listarUsuarios()
+    {
+        // Define a data limite de 3 meses atrás
+        $tresMesesAtras = Carbon::now()->subMonths(3);
+
+        // Busca usuários que NÃO possuem a role 'admin'
+        $usuarios = User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'admin');
+            })
+            ->withCount(['agendamentos as ativos_ultimos_3_meses' => function ($query) use ($tresMesesAtras) {
+                $query->where('data_escolhida', '>=', $tresMesesAtras);
+            }])
+            ->orderBy('name', 'asc')
+            ->paginate(15);
+
+        return view('admin.usuarios.index', compact('usuarios'));
     }
 }

@@ -153,8 +153,20 @@ class AgendamentoController extends Controller
     {
         $usuarioLogado = Auth::user();
         
-        // 1. Verifica se o usuário está suspenso (de castigo)
-        if ($usuarioLogado && $usuarioLogado->bloqueado_ate && $usuarioLogado->bloqueado_ate->isFuture()) {
+        // 💡 1. IDENTIFICAÇÃO DO PERFIL E ORIGEM DO AGENDAMENTO
+        $clienteParaAgendamento = null;
+        $isAdminAgendando = false;
+
+        if (session()->has('agendamento_cliente_id')) {
+            $clienteParaAgendamento = User::find(session('agendamento_cliente_id'));
+            $isAdminAgendando = $usuarioLogado && $usuarioLogado->hasRole('admin');
+        }
+
+        // Define o usuário dono do agendamento (Cliente da sessão OU Usuário Logado)
+        $usuarioAlvo = $clienteParaAgendamento ?? $usuarioLogado;
+
+        // 💡 2. VALIDAÇÃO DE SUSPENSÃO (Apenas para o próprio cliente agendando)
+        if (!$isAdminAgendando && $usuarioAlvo && $usuarioAlvo->bloqueado_ate && $usuarioAlvo->bloqueado_ate->isFuture()) {
             return redirect()->back()->withErrors(['punicao' => 'Seu perfil está temporariamente impedido de realizar agendamentos.']);
         }
 
@@ -167,97 +179,79 @@ class AgendamentoController extends Controller
             'hora_escolhida'   => 'required',
         ]);
 
-        // 2. REGRA DE RESTRIÇÃO: Apenas 1 agendamento ativo por cliente
-        // Verifica se o cliente já possui um agendamento pendente ou confirmado
-        $agendamentoAtivo = Agendamento::whereIn('status', ['confirmado', 'pendente']) // Ajuste os status de agendamento ativo se necessário
-            ->where(function($query) use ($usuarioLogado, $dadosValidados) {
-                if ($usuarioLogado) {
-                    // Se estiver logado, busca pelo ID de usuário ou pelo nome exato do perfil
-                    $query->where('user_id', $usuarioLogado->id)
-                          ->orWhere('cliente_nome', $usuarioLogado->name);
-                } else {
-                    // Se for agendamento sem login, busca pelo nome fornecido no input
-                    $query->where('cliente_nome', $dadosValidados['cliente_nome']);
-                }
-            })
-            ->first();
+        // 💡 3. PREVENÇÃO DE DUPLO AGENDAMENTO DA MANICURE (Evita choque de horários)
+        $horarioOcupado = Agendamento::where('manicure_id', $dadosValidados['manicure_id'])
+            ->where('data_escolhida', $dadosValidados['data_escolhida'])
+            ->where('hora_escolhida', $dadosValidados['hora_escolhida'])
+            ->whereIn('status', ['confirmado', 'pendente'])
+            ->exists();
 
-        if ($agendamentoAtivo) {
-            $dataAtiva = Carbon::parse($agendamentoAtivo->data_escolhida)->format('d/m/Y');
-            $horaAtiva = Carbon::parse($agendamentoAtivo->hora_escolhida)->format('H:i');
-            
+        if ($horarioOcupado) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['cliente_nome' => "Você já possui um agendamento ativo para o dia {$dataAtiva} às {$horaAtiva}h. Conclua ou cancele o atual antes de marcar um novo."]);
+                ->withErrors(['hora_escolhida' => 'A profissional escolhida já possui um atendimento neste mesmo dia e horário. Escolha outro horário.']);
         }
 
-        // 3. Validação de Bloqueio Administrativo de Horário
+        // 💡 4. RESTRIÇÃO DE 1 AGENDAMENTO ATIVO POR CLIENTE (Liberado para o Admin)
+        if (!$isAdminAgendando) {
+            $agendamentoAtivo = Agendamento::whereIn('status', ['confirmado', 'pendente'])
+                ->where(function($query) use ($usuarioAlvo, $dadosValidados) {
+                    if ($usuarioAlvo) {
+                        $query->where('user_id', $usuarioAlvo->id)
+                            ->orWhere('cliente_nome', $usuarioAlvo->name);
+                    } else {
+                        $query->where('cliente_nome', $dadosValidados['cliente_nome']);
+                    }
+                })
+                ->first();
+
+            if ($agendamentoAtivo) {
+                $dataAtiva = Carbon::parse($agendamentoAtivo->data_escolhida)->format('d/m/Y');
+                $horaAtiva = Carbon::parse($agendamentoAtivo->hora_escolhida)->format('H:i');
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['cliente_nome' => "Você já possui um agendamento ativo para o dia {$dataAtiva} às {$horaAtiva}h."]);
+            }
+        }
+
+        // 💡 5. VALIDAÇÃO DE BLOQUEIO ADMINISTRATIVO DE HORÁRIO
         $horaFormatada = Carbon::parse($dadosValidados['hora_escolhida'])->format('H:i');
         
         $estaBloqueado = Bloqueio::where('data', $dadosValidados['data_escolhida'])
             ->where(function($query) use ($horaFormatada) {
                 $query->whereNull('horario_inicio')
-                      ->orWhere(function($q) use ($horaFormatada) {
-                          $q->where('horario_inicio', '<=', $horaFormatada)
+                    ->orWhere(function($q) use ($horaFormatada) {
+                        $q->where('horario_inicio', '<=', $horaFormatada)
                             ->where('horario_fim', '>', $horaFormatada);
-                      });
+                    });
             })->exists();
 
         if ($estaBloqueado) {
-            return redirect()->back()->withErrors(['hora_escolhida' => 'Desculpe, este horário acabou de ser bloqueado administrativamente.']);
+            return redirect()->back()->withErrors(['hora_escolhida' => 'Desculpe, este horário está bloqueado para agendamentos.']);
         }
 
-        // 4. Criação do Agendamento
+        // 💡 6. GRAVAÇÃO SEGURA DO AGENDAMENTO
         Agendamento::create([
-            'cliente_nome'     => $dadosValidados['cliente_nome'],
-            'cliente_whatsapp' => $dadosValidados['cliente_whatsapp'] ?? 'Não informado',
+            'cliente_nome'     => $clienteParaAgendamento ? $clienteParaAgendamento->name : $dadosValidados['cliente_nome'],
+            'cliente_whatsapp' => $clienteParaAgendamento ? ($clienteParaAgendamento->telefone ?? $dadosValidados['cliente_whatsapp']) : ($dadosValidados['cliente_whatsapp'] ?? 'Não informado'),
             'servico_id'       => $dadosValidados['servico_id'],
             'manicure_id'      => $dadosValidados['manicure_id'],
             'data_escolhida'   => $dadosValidados['data_escolhida'],
             'hora_escolhida'   => $dadosValidados['hora_escolhida'],
             'status'           => 'confirmado',
-            'user_id'          => $usuarioLogado ? $usuarioLogado->id : null,
+            'user_id'          => $usuarioAlvo ? $usuarioAlvo->id : null,
         ]);
+
+        // 💡 7. REDIRECIONAMENTO E LIMPEZA DE SESSÃO
+        if (session()->has('agendamento_cliente_id')) {
+            session()->forget('agendamento_cliente_id');
+            
+            return redirect()->route('admin.painel', ['data' => $dadosValidados['data_escolhida']])
+                ->with('success', "Agendamento realizado com sucesso para {$usuarioAlvo->name} no dia " . Carbon::parse($dadosValidados['data_escolhida'])->format('d/m/Y') . "!");
+        }
 
         return redirect()->route('home.index')->with('sucesso', 'Seu agendamento foi realizado com sucesso!');
-    }
-
-    public function meusAgendamentos()
-    {
-        $agendamentos = Agendamento::where('cliente_nome', auth()->user()->name)
-            ->with(['servico', 'manicure'])
-            ->orderBy('data_escolhida', 'desc')
-            ->orderBy('hora_escolhida', 'desc')
-            ->get();
-
-        return view('cliente.agendamentos', compact('agendamentos'));
-    }
-
-    public function clienteCancela($id)
-    {
-        $agendamento = Agendamento::findOrFail($id);
-
-        // 1. Segurança: Garante que o agendamento pertence ao usuário logado
-        if ($agendamento->cliente_nome !== auth()->user()->name) {
-            return redirect()->back()->with('error', 'Ação não autorizada.');
-        }
-
-        // 2. Regra de Negócio: Impede cancelamento com menos de 24h de antecedência
-        // Mesclamos a data e a hora do agendamento para criar um objeto Carbon completo
-        $dataHoraAgendamento = Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
-
-        // diffInHours com o segundo parâmetro como 'false' garante que se o horário 
-        // já tiver passado ou estiver muito em cima, o valor retornado será menor que 24
-        if (Carbon::now()->diffInHours($dataHoraAgendamento, false) < 24) {
-            return redirect()->back()->with('error', 'O cancelamento só é permitido com no mínimo 24 horas de antecedência. Entre em contato conosco para suporte.');
-        }
-
-        // 3. Executa o cancelamento caso passe em todas as validações
-        $agendamento->update([
-            'status' => 'cancelado'
-        ]);
-
-        return redirect()->back()->with('success', 'Agendamento cancelado com sucesso!');
     }
 
     public function concluir(Request $request, $id)
@@ -446,5 +440,19 @@ class AgendamentoController extends Controller
         $lucroLiquido = max(0, $faturamentoTotal - $despesasTotal);
 
         return view('admin.graficos', compact('metricas', 'faturamentoTotal', 'despesasTotal', 'lucroLiquido'));
+    }
+
+    public function criarParaUsuario($userId)
+    {
+        // Busca a cliente pelo ID ou lança erro 404 se não existir
+        $cliente = User::findOrFail($userId);
+
+        // Salva temporariamente a cliente na sessão para o fluxo de agendamento saber quem é
+        session(['agendamento_cliente_id' => $cliente->id]);
+
+        // Redireciona o Admin para a tela de escolha de horários/serviços
+        // (Ajuste o nome da rota abaixo caso a sua tela de agendamento use outro nome, ex: 'agendamento.horarios')
+        return redirect()->route('agendamento.horarios')
+            ->with('success', "Iniciando agendamento para a cliente: {$cliente->name}");
     }
 }

@@ -28,6 +28,7 @@ class HorarioSeeder extends Seeder
             ['hora' => '12:00', 'dia_tipo' => 'sabado'],
             ['hora' => '14:00', 'dia_tipo' => 'sabado'],
             ['hora' => '16:00', 'dia_tipo' => 'sabado'],
+            ['hora' => '18:00', 'dia_tipo' => 'sabado'],
         ];
 
         // Insere ambos os blocos no banco

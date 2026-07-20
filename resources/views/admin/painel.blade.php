@@ -59,10 +59,16 @@
 
                 {{-- Botões de Ação Alinhados Abaixo --}}
                 <div class="flex flex-col sm:flex-row items-center gap-3">
-                    {{-- Botão Clientes Suspensos --}}
+
+                    {{-- Botão Gestão de Clientes --}}
+                    <a href="{{ route('admin.usuarios.index') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-purple-500/30 bg-purple-500/10 text-purple-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-purple-600 hover:text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center justify-center gap-1.5">
+                        <i class="la la-users text-base"></i> Gestão de Clientes
+                    </a>
+                    
+                    <!-- {{-- Botão Clientes Suspensos --}}
                     <a href="{{ route('admin.clientes.suspensos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-red-950/50 bg-red-950/10 text-red-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-900 hover:text-white flex items-center justify-center gap-1.5">
                         <i class="la la-user-slash text-base"></i> Clientes Suspensos
-                    </a>
+                    </a> -->
 
                     {{-- Botão Relatório Mensal --}}
                     <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
@@ -536,10 +542,10 @@
             });
         }
 
-        @if(session('sucesso'))
+        @if(session('sucesso') || session('success'))
             Swal.fire({
                 title: 'Sucesso!',
-                text: "{{ session('sucesso') }}",
+                text: "{{ session('sucesso') ?? session('success') }}",
                 icon: 'success',
                 background: '#121214',
                 color: '#e4e4e7',
@@ -549,10 +555,10 @@
             });
         @endif
 
-        @if(session('erro') || $errors->any())
+        @if(session('erro') || session('error') || $errors->any())
             Swal.fire({
-                title: 'Acesso Negado!',
-                text: "{{ session('erro') ?? 'Senha administrativa inválida ou não preenchida.' }}",
+                title: 'Atenção!',
+                text: "{{ session('erro') ?? session('error') ?? $errors->first() }}",
                 icon: 'error',
                 background: '#121214',
                 color: '#e4e4e7',

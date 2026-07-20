@@ -9,15 +9,15 @@ use App\Http\Controllers\Admin\ConfiguracaoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 
-// Route::get('/rodar-seeder-manicure', function () {
-//     try {
-//         \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
-//         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-//         return "Banco limpo, migrado e seeders rodados com sucesso!";
-//     } catch (\Exception $e) {
-//         return "Erro: " . $e->getMessage();
-//     }
-// });
+Route::get('/rodar-seeder-manicure', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return "Banco limpo, migrado e seeders rodados com sucesso!";
+    } catch (\Exception $e) {
+        return "Erro: " . $e->getMessage();
+    }
+});
 
 Route::get('/instalar-banco-manicure', function () {
     try {

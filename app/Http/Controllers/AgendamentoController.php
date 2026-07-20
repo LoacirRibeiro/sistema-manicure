@@ -85,7 +85,7 @@ class AgendamentoController extends Controller
                 ->toArray();
 
             $horasPermitidas = $isSabado 
-                ? ['08:00', '10:00', '12:00', '14:00', '16:00']
+                ? ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
                 : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
             $todosHorariosDoGrid = Horario::whereIn(DB::raw("DATE_FORMAT(hora, '%H:%i')"), $horasPermitidas)

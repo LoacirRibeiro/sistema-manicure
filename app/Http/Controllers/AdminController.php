@@ -361,21 +361,63 @@ class AdminController extends Controller
         return view('admin.relatorio', compact('agendamentos', 'contagem', 'periodoSelecionado'));
     }
 
-    public function listarUsuarios()
+    public function listarUsuarios(Request $request)
     {
-        // Define a data limite de 3 meses atrás
+        // 1. Captura o termo digitado na barra de pesquisa
+        $search = $request->input('search');
+
+        // Data de corte de 3 meses atrás para considerar cliente "Ativo"
         $tresMesesAtras = Carbon::now()->subMonths(3);
 
-        // Busca usuários que NÃO possuem a role 'admin'
-        $usuarios = User::whereDoesntHave('roles', function ($query) {
-                $query->where('name', 'admin');
-            })
-            ->withCount(['agendamentos as ativos_ultimos_3_meses' => function ($query) use ($tresMesesAtras) {
-                $query->where('data_escolhida', '>=', $tresMesesAtras);
+        // 2. Inicia a busca excluindo admins
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        });
+
+        // 3. Se o usuário digitou algo na busca, aplica o filtro por Nome, E-mail ou Telefone
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                ->orWhere('email', 'LIKE', "%{$search}%")
+                ->orWhere('telefone', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 4. Adiciona a contagem de agendamentos recentes e ordena
+        $usuarios = $query->withCount(['agendamentos as agendamentos_recentes' => function ($q) use ($tresMesesAtras) {
+                $q->where('data_escolhida', '>=', $tresMesesAtras)
+                ->where('status', '!=', 'cancelado');
             }])
             ->orderBy('name', 'asc')
-            ->paginate(15);
+            ->paginate(15)
+            ->appends($request->all()); // Mantém o termo ?search=... na paginação
 
-        return view('admin.usuarios.index', compact('usuarios'));
-    }
+        // 5. Métricas Gerais (Para alimentar os cards no topo da página)
+        $totalClientes = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })->count();
+
+        $novosEsteMes = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })->whereMonth('created_at', Carbon::now()->month)
+        ->whereYear('created_at', Carbon::now()->year)
+        ->count();
+
+        $totalAtivos = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })->whereHas('agendamentos', function ($q) use ($tresMesesAtras) {
+            $q->where('data_escolhida', '>=', $tresMesesAtras)
+            ->where('status', '!=', 'cancelado');
+        })->count();
+
+        $totalInativos = max(0, $totalClientes - $totalAtivos);
+
+        return view('admin.usuarios.index', compact(
+            'usuarios', 
+            'totalClientes', 
+            'novosEsteMes', 
+            'totalAtivos', 
+            'totalInativos'
+        ));
+}
 }

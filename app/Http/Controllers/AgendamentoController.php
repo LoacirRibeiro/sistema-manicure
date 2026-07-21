@@ -478,27 +478,49 @@ class AgendamentoController extends Controller
         return redirect()->back()->with('sucesso', "O agendamento online de {$cliente->name} foi liberado com sucesso!");
     }
 
-    public function graficosMensais()
+    public function graficosMensais(Request $request)
     {
-        $inicioMes = Carbon::now()->startOfMonth();
-        $fimMes = Carbon::now()->endOfMonth();
+        // Captura o mês e ano do filtro (ou assume o mês/ano atual por padrão)
+        $mes = $request->get('mes', Carbon::now()->format('m'));
+        $ano = $request->get('ano', Carbon::now()->format('Y'));
+
+        // Define o intervalo exato com base no filtro
+        $inicioMes = Carbon::createFromDate($ano, $mes, 1)->startOfMonth();
+        $fimMes = Carbon::createFromDate($ano, $mes, 1)->endOfMonth();
 
         // 1. Métricas de Status (Gráfico 1)
-        $dadosStatus = DB::table('agendamentos')
-            ->select('status', DB::raw('count(*) as total'))
+        $agendamentos = DB::table('agendamentos')
             ->whereBetween('data_escolhida', [$inicioMes, $fimMes])
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->all();
+            ->get();
 
-        $statusPadrao = ['concluido' => 0, 'cancelado' => 0, 'nao_compareceu' => 0, 'remarcado' => 0];
-        $metricas = array_merge($statusPadrao, $dadosStatus);
+        $metricas = [
+            'concluido'      => 0,
+            'cancelado'      => 0,
+            'nao_compareceu' => 0,
+            'remarcado'      => 0,
+        ];
+
+        foreach ($agendamentos as $agendamento) {
+            $statusSlug = strtolower(trim($agendamento->status));
+            
+            // Prioridade: Se possui a flag de remarcação ativada (is_remarcado == true/1) OU se o status for 'remarcado'
+            $foiRemarcado = (!empty($agendamento->is_remarcado) && $agendamento->is_remarcado == 1) || $statusSlug === 'remarcado';
+
+            if ($foiRemarcado) {
+                $metricas['remarcado']++;
+            } elseif (array_key_exists($statusSlug, $metricas)) {
+                $metricas[$statusSlug]++;
+            }
+        }
 
         // 2. Métricas Financeiras (Gráfico 2)
         $faturamentoTotal = DB::table('agendamentos')
             ->join('servicos', 'agendamentos.servico_id', '=', 'servicos.id')
-            ->where('agendamentos.status', 'concluido')
             ->whereBetween('agendamentos.data_escolhida', [$inicioMes, $fimMes])
+            ->where(function($query) {
+                $query->where('agendamentos.status', 'concluido')
+                      ->orWhere('agendamentos.is_remarcado', 1);
+            })
             ->sum('servicos.preco');
 
         $despesasTotal = DB::table('despesas')
@@ -507,6 +529,29 @@ class AgendamentoController extends Controller
 
         $lucroLiquido = max(0, $faturamentoTotal - $despesasTotal);
 
-        return view('admin.graficos', compact('metricas', 'faturamentoTotal', 'despesasTotal', 'lucroLiquido'));
+        // 3. Métricas de Serviços Mais Realizados (Gráfico 3)
+        $servicosRealizados = DB::table('agendamentos')
+            ->join('servicos', 'agendamentos.servico_id', '=', 'servicos.id')
+            ->select('servicos.nome as servico', DB::raw('count(*) as total'))
+            ->whereBetween('agendamentos.data_escolhida', [$inicioMes, $fimMes])
+            ->where(function($query) {
+                $query->where('agendamentos.status', 'concluido')
+                      ->orWhere('agendamentos.is_remarcado', 1);
+            })
+            ->groupBy('servicos.nome')
+            ->orderByDesc('total')
+            ->get();
+
+        $servicosLabels = $servicosRealizados->pluck('servico')->toArray();
+        $servicosTotais = $servicosRealizados->pluck('total')->toArray();
+
+        return view('admin.graficos', compact(
+            'metricas', 
+            'faturamentoTotal', 
+            'despesasTotal', 
+            'lucroLiquido',
+            'servicosLabels',
+            'servicosTotais'
+        ));
     }
 }

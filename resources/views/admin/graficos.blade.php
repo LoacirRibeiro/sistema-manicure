@@ -38,10 +38,10 @@
         </div>
     </div>
 
-    <div class="w-full max-w-6xl mx-auto mt-6 mb-8 px-4 sm:px-">
+    {{-- Filtro de Período --}}
+    <div class="w-full max-w-6xl mx-auto mt-6 mb-8 px-4">
         <form action="{{ route('admin.graficos') }}" method="GET" class="card-glass p-5 md:p-6 rounded-3xl border border-zinc-800/80 bg-zinc-900/10 flex flex-col gap-5 shadow-xl">
 
-            {{-- Campos do Filtro --}}
             <div class="flex flex-col sm:flex-row items-end gap-4">
                 
                 {{-- Mês --}}
@@ -113,7 +113,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-zinc-900 pb-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Desempenho Mensal</h1>
-                <p class="text-sm text-zinc-500 mt-1">Análise de agendamentos realizados em {{ \Carbon\Carbon::now()->translatedFormat('F \d\e Y') }}</p>
+                <p class="text-sm text-zinc-500 mt-1">Análise detalhada de agendamentos e procedimentos realizados</p>
             </div>
         </div>
 
@@ -137,22 +137,35 @@
             </div>
         </div>
 
-        {{-- Seção de Gráficos Unificados em Barras --}}
+        {{-- Seção de Gráficos --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {{-- Gráfico 1: Volume por Categoria --}}
-            <div class="card-glass p-6 rounded-3xl lg:col-span-6 flex flex-col justify-between min-h-[400px]">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-4">Volume por Categoria</h3>
+            {{-- Gráfico 1: Volume por Categoria (Status) --}}
+            <div class="card-glass p-6 rounded-3xl lg:col-span-6 flex flex-col justify-between min-h-[380px]">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-4">Volume por Status</h3>
                 <div class="relative flex-grow flex items-center justify-center">
                     <canvas id="chartBarras"></canvas>
                 </div>
             </div>
 
-            {{-- Gráfico 2: Saúde Financeira (Agora também em Barras) --}}
-            <div class="card-glass p-6 rounded-3xl lg:col-span-6 flex flex-col justify-between min-h-[400px]">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-4">Saúde Financeira (Faturamento vs. Despesas)</h3>
+            {{-- Gráfico 2: Saúde Financeira --}}
+            <div class="card-glass p-6 rounded-3xl lg:col-span-6 flex flex-col justify-between min-h-[380px]">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mb-4">Saúde Financeira</h3>
                 <div class="relative flex-grow flex items-center justify-center">
                     <canvas id="chartFinanceiroBarras"></canvas>
+                </div>
+            </div>
+
+            {{-- Novo Gráfico 3: Serviços/Procedimentos Mais Realizados --}}
+            <div class="card-glass p-6 rounded-3xl lg:col-span-12 flex flex-col justify-between min-h-[400px]">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400">Serviços Mais Realizados no Mês</h3>
+                    <span class="text-xs text-pink-400 bg-pink-500/10 border border-pink-500/20 px-3 py-1 rounded-full font-semibold">
+                        Procedimentos Concluídos
+                    </span>
+                </div>
+                <div class="relative flex-grow flex items-center justify-center">
+                    <canvas id="chartServicos"></canvas>
                 </div>
             </div>
 
@@ -167,7 +180,11 @@
 
     {{-- Geração dos Gráficos via JS --}}
     <script>
-        // Dados vindos do Controller do Laravel
+        // Configuração Global de Fontes
+        Chart.defaults.color = '#71717a'; 
+        Chart.defaults.font.family = 'Poppins';
+
+        // 1. Dados de Status
         const dadosGraficos = {
             concluidos: {{ $metricas['concluido'] }},
             cancelados: {{ $metricas['cancelado'] }},
@@ -175,18 +192,6 @@
             remarcados: {{ $metricas['remarcado'] }}
         };
 
-        const coresStatus = {
-            concluidos: '#10b981', // Emerald 500
-            cancelados: '#ef4444',  // Red 500
-            faltas: '#f59e0b',      // Amber 500
-            remarcados: '#06b6d4'   // Cyan 500
-        };
-
-        // Configuração Global de Cores das fontes do Chart.js para combinar com o modo escuro
-        Chart.defaults.color = '#71717a'; 
-        Chart.defaults.font.family = 'Poppins';
-
-        // 1. Inicializando Gráfico de Barras - Status
         const ctxBarras = document.getElementById('chartBarras').getContext('2d');
         new Chart(ctxBarras, {
             type: 'bar',
@@ -195,50 +200,38 @@
                 datasets: [{
                     label: 'Atendimentos',
                     data: [dadosGraficos.concluidos, dadosGraficos.cancelados, dadosGraficos.faltas, dadosGraficos.remarcados],
-                    backgroundColor: [coresStatus.concluidos, coresStatus.cancelados, coresStatus.faltas, coresStatus.remarcados],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#06b6d4'],
                     borderRadius: 8,
-                    borderWidth: 0,
                     barThickness: 32
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { stepSize: 1, color: '#a1a1aa' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#a1a1aa' }
-                    }
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { stepSize: 1, color: '#a1a1aa' } },
+                    x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
                 }
             }
         });
 
-        // Dados Financeiros vindos do Controller
+        // 2. Dados Financeiros
         const financeiro = {
             faturamento: {{ $faturamentoTotal ?? 0 }},
             despesas: {{ $despesasTotal ?? 0 }},
             lucro: {{ $lucroLiquido ?? 0 }}
         };
 
-        // 2. Inicializando Gráfico de Barras - Financeiro
         const ctxFinanceiro = document.getElementById('chartFinanceiroBarras').getContext('2d');
         new Chart(ctxFinanceiro, {
             type: 'bar',
             data: {
                 labels: ['Faturamento Brut.', 'Despesas', 'Lucro Líquido'],
                 datasets: [{
-                    label: 'Valores em R$',
                     data: [financeiro.faturamento, financeiro.despesas, financeiro.lucro],
-                    backgroundColor: ['#3b82f6', '#ef4444', '#10b981'], // Azul (Faturamento), Vermelho (Despesas), Verde (Lucro)
+                    backgroundColor: ['#3b82f6', '#ef4444', '#10b981'],
                     borderRadius: 8,
-                    borderWidth: 0,
                     barThickness: 32
                 }]
             },
@@ -249,10 +242,7 @@
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                let value = context.raw || 0;
-                                return ' R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                            }
+                            label: (ctx) => ' R$ ' + ctx.raw.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                         }
                     }
                 },
@@ -261,15 +251,48 @@
                         grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: {
                             color: '#a1a1aa',
-                            callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 0 });
-                            }
+                            callback: (v) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0 })
                         }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#a1a1aa' }
+                    x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
+                }
+            }
+        });
+
+        // 3. Dados dos Serviços / Procedimentos Mais Realizados
+        const servicosLabels = {!! json_encode($servicosLabels ?? ['Banho de Gel', 'Alongamento', 'Manutenção', 'Esmaltação em Gel']) !!};
+        const servicosTotais = {!! json_encode($servicosTotais ?? [0, 0, 0, 0]) !!};
+
+        const ctxServicos = document.getElementById('chartServicos').getContext('2d');
+        new Chart(ctxServicos, {
+            type: 'bar',
+            data: {
+                labels: servicosLabels,
+                datasets: [{
+                    label: 'Quantidade Realizada',
+                    data: servicosTotais,
+                    backgroundColor: '#FF007F', // Rosa Neon NailsStudio
+                    borderRadius: 8,
+                    barThickness: 28
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ' ' + ctx.raw + ' procedimento(s)'
+                        }
                     }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { stepSize: 1, color: '#a1a1aa' }
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
                 }
             }
         });

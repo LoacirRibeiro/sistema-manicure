@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // 1. Confia no Proxy do Railway para que todas as URLs e formulários gerem HTTPS
+        $middleware->trustProxies(at: '*');
+
+        // 2. Seus aliases de Permissão do Spatie
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

@@ -41,7 +41,7 @@
                         $statusText = $agendamento->status;
 
                         // Cores específicas para cada status
-                        if ($agendamento->status == 'confirmado') {
+                        if ($agendamento->status == 'agendado') {
                             $borderColor = 'border-l-pink-500';
                             $badgeClass = 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
                         } elseif ($agendamento->status == 'concluido') {
@@ -71,7 +71,7 @@
                         </div>
                         
                         {{-- AÇÃO DE CANCELAR --}}
-                        @if($agendamento->status == 'confirmado')
+                        @if($agendamento->status == 'agendado')
                             @php
                                 $dataHoraAgendamento = \Carbon\Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
                                 $podeCancelar = \Carbon\Carbon::now()->diffInHours($dataHoraAgendamento, false) >= 24;

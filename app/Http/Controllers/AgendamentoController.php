@@ -11,7 +11,7 @@ use App\Models\Agendamento;
 use App\Models\Bloqueio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash; // Importação da Facade Hash adicionada de forma limpa
+use Illuminate\Support\Facades\Hash;
 
 class AgendamentoController extends Controller
 {
@@ -23,32 +23,40 @@ class AgendamentoController extends Controller
         $usuarioLogado = Auth::user();
         $estaDeCastigo = $usuarioLogado && $usuarioLogado->bloqueado_ate && $usuarioLogado->bloqueado_ate->isFuture();
 
-        $servicoSelecionadoId = $request->input('servico_id');
+        $servicoSelecionadoId  = $request->input('servico_id');
         $manicureSelecionadaId = $request->input('manicure_id');
 
         $dataSelecionada = $request->get('data_escolhida', Carbon::today()->format('Y-m-d'));
-        $carbonData = Carbon::parse($dataSelecionada);
+        $carbonData      = Carbon::parse($dataSelecionada);
 
         $estudioFechado = $carbonData->isSunday();
-        $isSabado = $carbonData->isSaturday();
+        $isSabado       = $carbonData->isSaturday();
+
+        // 1. CARREGAMENTO ANTECIPADO (Busca manicures pela coluna role)
+        $servicos  = Servico::all();
+        $manicures = User::where('role', 'manicure')->get();
 
         $diasLotados = [];
-        $hoje = Carbon::today();
+        $hoje        = Carbon::today();
 
+        // 2. VERIFICAÇÃO DOS PRÓXIMOS 14 DIAS
         for ($i = 0; $i < 14; $i++) {
             $dataVerificar = $hoje->copy()->addDays($i);
-            $dataString = $dataVerificar->format('Y-m-d');
+            $dataString    = $dataVerificar->format('Y-m-d');
 
+            // Domingo estúdio fechado
             if ($dataVerificar->isSunday()) {
                 continue;
             }
 
+            // Cliente bloqueado (castigo)
             if ($estaDeCastigo) {
                 $diasLotados[] = $dataString;
                 continue;
             }
 
-            $diaBloqueadoTodo = Bloqueio::where('data', $dataString)
+            // Bloqueio do dia inteiro no estúdio
+            $diaBloqueadoTodo = Bloqueio::whereDate('data', $dataString)
                 ->whereNull('horario_inicio')
                 ->exists();
 
@@ -57,35 +65,63 @@ class AgendamentoController extends Controller
                 continue; 
             }
 
-            $limiteHorarios = 5; 
+            // Horários permitidos do dia (Sábado x Dias úteis)
+            $horasPermitidas = $dataVerificar->isSaturday() 
+                ? ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+                : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
-            $qtdAgendados = Agendamento::where('data_escolhida', $dataString)
-                ->where('status', '!=', 'cancelado')
-                ->count();
+            $totalHorariosNoGrid = count($horasPermitidas);
 
-            if ($qtdAgendados >= $limiteHorarios) {
-                $diasLotados[] = $dataString;
+            // Se o cliente escolheu uma manicure específica:
+            if ($manicureSelecionadaId) {
+                // Busca agendamentos dessa manicure específica
+                $qtdAgendados = Agendamento::whereDate('data_escolhida', $dataString)
+                    ->where('manicure_id', $manicureSelecionadaId)
+                    ->where('status', '!=', 'cancelado')
+                    ->count();
+
+                // Se a quantidade de agendamentos atinge ou supera o total de horários da grade
+                if ($qtdAgendados >= $totalHorariosNoGrid) {
+                    $diasLotados[] = $dataString;
+                }
+            } else {
+                // Se NENHUMA manicure foi selecionada ainda:
+                // O dia só estará lotado se TODAS as manicures cadastradas estiverem lotadas!
+                $totalManicures = $manicures->count() ?: 1;
+                $capacidadeTotalEstudio = $totalHorariosNoGrid * $totalManicures;
+
+                $qtdAgendadosGeral = Agendamento::whereDate('data_escolhida', $dataString)
+                    ->where('status', '!=', 'cancelado')
+                    ->count();
+
+                if ($qtdAgendadosGeral >= $capacidadeTotalEstudio) {
+                    $diasLotados[] = $dataString;
+                }
             }
         }
 
         $diaBloqueadoTotalmente = Bloqueio::where('data', $dataSelecionada)->whereNull('horario_inicio')->exists();
 
+        // 3. HORÁRIOS DO DIA SELECIONADO
         if ($estudioFechado || $diaBloqueadoTotalmente || $estaDeCastigo) {
             $horariosDisponiveis = collect(); 
-            $servicos = Servico::all();
-            $manicures = User::all(); 
-            $estudioFechado = true; 
+            $estudioFechado      = true; 
         } else {
-            $horariosOcupados = Agendamento::where('data_escolhida', $dataSelecionada)
-                ->where('status', '!=', 'cancelado')
-                ->pluck('hora_escolhida')
+            $queryOcupados = Agendamento::where('data_escolhida', $dataSelecionada)
+                ->where('status', '!=', 'cancelado');
+
+            if ($manicureSelecionadaId) {
+                $queryOcupados->where('manicure_id', $manicureSelecionadaId);
+            }
+
+            $horariosOcupados = $queryOcupados->pluck('hora_escolhida')
                 ->map(function($hora) {
-                    return \Carbon\Carbon::parse($hora)->format('H:i');
+                    return Carbon::parse($hora)->format('H:i');
                 })
                 ->toArray();
 
             $horasPermitidas = $isSabado 
-                ? ['08:00', '10:00', '12:00', '14:00', '16:00']
+                ? ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
                 : ['09:00', '11:00', '13:00', '15:00', '17:00'];
 
             $todosHorariosDoGrid = Horario::whereIn(DB::raw("DATE_FORMAT(hora, '%H:%i')"), $horasPermitidas)
@@ -113,7 +149,7 @@ class AgendamentoController extends Controller
 
                 foreach ($bloqueiosParciais as $bloqueio) {
                     $inicio = Carbon::parse($bloqueio->horario_inicio)->format('H:i');
-                    $fim = Carbon::parse($bloqueio->horario_fim)->format('H:i');
+                    $fim    = Carbon::parse($bloqueio->horario_fim)->format('H:i');
 
                     if ($horaFormatada >= $inicio && $horaFormatada < $fim) {
                         return false; 
@@ -122,9 +158,6 @@ class AgendamentoController extends Controller
 
                 return true; 
             });
-                
-            $servicos = Servico::all();
-            $manicures = User::role('manicure')->get();
         }
 
         $servicoSelecionado = Servico::find($servicoSelecionadoId);
@@ -180,7 +213,7 @@ class AgendamentoController extends Controller
         $horarioOcupado = Agendamento::where('manicure_id', $dadosValidados['manicure_id'])
             ->where('data_escolhida', $dadosValidados['data_escolhida'])
             ->where('hora_escolhida', $dadosValidados['hora_escolhida'])
-            ->whereIn('status', ['confirmado', 'pendente'])
+            ->whereIn('status', ['agendado', 'pendente'])
             ->exists();
 
         if ($horarioOcupado) {
@@ -191,7 +224,7 @@ class AgendamentoController extends Controller
 
         // 💡 4. RESTRIÇÃO DE 1 AGENDAMENTO ATIVO POR CLIENTE (Liberado para o Admin)
         if (!$isAdminAgendando) {
-            $agendamentoAtivo = Agendamento::whereIn('status', ['confirmado', 'pendente'])
+            $agendamentoAtivo = Agendamento::whereIn('status', ['agendado', 'pendente'])
                 ->where(function($query) use ($usuarioAlvo, $dadosValidados) {
                     if ($usuarioAlvo) {
                         $query->where('user_id', $usuarioAlvo->id)
@@ -236,7 +269,7 @@ class AgendamentoController extends Controller
             'manicure_id'      => $dadosValidados['manicure_id'],
             'data_escolhida'   => $dadosValidados['data_escolhida'],
             'hora_escolhida'   => $dadosValidados['hora_escolhida'],
-            'status'           => 'confirmado',
+            'status'           => 'agendado',
             'user_id'          => $usuarioAlvo ? $usuarioAlvo->id : null,
         ]);
 
@@ -326,13 +359,15 @@ class AgendamentoController extends Controller
 
         $agendamento = Agendamento::findOrFail($id);
 
+        // Atualização limpa sem espaços no status
         $agendamento->update([
             'data_escolhida' => $request->nova_data,
             'hora_escolhida' => $request->nova_hora,
-            'status'         => 'confirmado'
+            'status'         => 'remarcado',
+            'is_remarcado'   => true,
         ]);
 
-        return redirect()->route('admin.painel', ['data_escolhida' => $request->nova_data])
+        return redirect()->route('admin.painel', ['data' => $request->nova_data])
             ->with('sucesso', 'Agendamento remarcado com sucesso!');
     }
 
@@ -394,6 +429,19 @@ class AgendamentoController extends Controller
         return redirect()->back()->with('sucesso', 'Falta registrada e histórico analisado com sucesso!');
     }
 
+    public function criarParaUsuario($userId)
+    {
+        // 1. Localiza o cliente
+        $cliente = User::findOrFail($userId);
+
+        // 2. Guarda o ID do cliente na sessão
+        session(['agendamento_cliente_id' => $cliente->id]);
+
+        // 3. Redireciona para a rota correta ('agendamento.horarios')
+        return redirect()->route('agendamento.horarios')
+            ->with('info', "Agendando horário em nome de: {$cliente->name}");
+    }
+
     /**
      * Exibe a listagem de clientes que estão atualmente suspensas (de castigo)
      */
@@ -447,19 +495,16 @@ class AgendamentoController extends Controller
         $metricas = array_merge($statusPadrao, $dadosStatus);
 
         // 2. Métricas Financeiras (Gráfico 2)
-        // Soma o valor de todos os agendamentos com status 'concluido' no mês
         $faturamentoTotal = DB::table('agendamentos')
-        ->join('servicos', 'agendamentos.servico_id', '=', 'servicos.id') // Junção das tabelas
-        ->where('agendamentos.status', 'concluido')
-        ->whereBetween('agendamentos.data_escolhida', [$inicioMes, $fimMes])
-        ->sum('servicos.preco'); // Certifique-se de que o nome da coluna de preço é 'valor'
+            ->join('servicos', 'agendamentos.servico_id', '=', 'servicos.id')
+            ->where('agendamentos.status', 'concluido')
+            ->whereBetween('agendamentos.data_escolhida', [$inicioMes, $fimMes])
+            ->sum('servicos.preco');
 
-        // Soma as despesas registradas no mês (ajuste de acordo com sua tabela de despesas)
-        $despesasTotal = DB::table('despesas') // Substitua pelo nome correto da sua tabela de despesas
-            ->whereBetween('data_vencimento', [$inicioMes, $fimMes]) // ou 'created_at'
+        $despesasTotal = DB::table('despesas')
+            ->whereBetween('data_vencimento', [$inicioMes, $fimMes])
             ->sum('valor');
 
-        // Calcula o Lucro Líquido
         $lucroLiquido = max(0, $faturamentoTotal - $despesasTotal);
 
         return view('admin.graficos', compact('metricas', 'faturamentoTotal', 'despesasTotal', 'lucroLiquido'));

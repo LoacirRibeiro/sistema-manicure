@@ -20,7 +20,8 @@ return new class extends Migration
             $table->foreignId('manicure_id')->constrained('users')->onDelete('cascade'); // 🔥 Adicionado link com a manicure (users)
             $table->date('data_escolhida'); 
             $table->time('hora_escolhida'); 
-            $table->string('status')->default('confirmado');
+            $table->string('status')->default('agendado');
+            $table->boolean('is_remarcado')->default(false);
             $table->string('forma_pagamento')->nullable();
             $table->text('observacoes')->nullable();
             $table->timestamps();

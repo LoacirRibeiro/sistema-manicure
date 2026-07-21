@@ -9,8 +9,8 @@ use App\Http\Requests\UserRequest;
 class UserCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation { store as traitStore; }
+    use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation { update as traitUpdate; }
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
 
@@ -47,22 +47,53 @@ class UserCrudController extends CrudController
 
         // 🔥 O campo mágico que vincula as Roles (Admin, Manicure, Caixa)
         CRUD::addField([
-            'name'      => 'roles',
-            'label'     => 'Cargo / Nível de Acesso',
-            'type'      => 'relationship',
-            'attribute' => 'name',
-            // Permite escolher mais de um papel se necessário, usando checkboxes organizados
-            'pivot'     => true, 
+            'name'          => 'roles',
+            'label'         => 'Cargo / Nível de Acesso',
+            'type'          => 'relationship',
+            'attribute'     => 'name',
+            'pivot'         => true, 
             'inline_create' => false,
         ]);
     }
 
     protected function setupUpdateOperation()
     {
-        // Reaproveita os campos da criação, mas remove a obrigatoriedade da senha se ficar em branco
+        // Reaproveita os campos da criação
         $this->setupCreateOperation();
         
         // Altera o campo password para não substituir a senha antiga caso o admin não digite nada
         CRUD::field('password')->type('password')->label('Nova Senha (deixe em branco para manter a atual)')->attributes(['autocomplete' => 'new-password']);
+    }
+
+    // 🔄 Sobrescreve a criação para atualizar a coluna 'role' na tabela 'users'
+    public function store()
+    {
+        $response = $this->traitStore();
+        $this->sincronizarColunaRole();
+        return $response;
+    }
+
+    // 🔄 Sobrescreve a edição para atualizar a coluna 'role' na tabela 'users'
+    public function update()
+    {
+        $response = $this->traitUpdate();
+        $this->sincronizarColunaRole();
+        return $response;
+    }
+
+    // ⚡ Função responsável por ler a Role do Spatie e salvar no campo da tabela 'users'
+    private function sincronizarColunaRole()
+    {
+        $entry = $this->crud->getCurrentEntry();
+
+        if ($entry) {
+            // Pega o nome da primeira role atribuída (ex: 'manicure', 'admin') ou padroniza 'cliente'
+            $nomeRole = $entry->roles()->first()?->name ?? 'cliente';
+
+            // Atualiza diretamente na coluna 'role' da tabela 'users' sem disparar eventos do Eloquent
+            $entry->updateQuietly([
+                'role' => strtolower($nomeRole)
+            ]);
+        }
     }
 }

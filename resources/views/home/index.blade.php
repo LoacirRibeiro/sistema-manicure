@@ -143,7 +143,7 @@
                 <div class="flex items-center gap-3 w-full md:w-auto justify-end border-t border-zinc-800/50 md:border-none pt-4 md:pt-0">
                     <span class="text-[10px] uppercase font-bold tracking-wider bg-zinc-800/80 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700/50">
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
-                        Confirmado
+                        Agendado
                     </span>
                     
                     <a href="{{ route('cliente.agendamentos') }}" class="bg-pink-500/10 text-neon font-bold text-xs px-3 py-1 rounded-full uppercase tracking-widest border border-pink-500/20">

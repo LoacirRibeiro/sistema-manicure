@@ -19,6 +19,8 @@ class Agendamento extends Model
         'status',
         'forma_pagamento',
         'observacoes',
+        'is_remarcado',
+        'user_id',
     ];
 
     public function servico()

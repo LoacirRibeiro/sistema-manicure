@@ -87,16 +87,6 @@
                     <a href="{{ route('admin.usuarios.index') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-purple-500/30 bg-purple-500/10 text-purple-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-purple-600 hover:text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center justify-center gap-1.5">
                         <i class="la la-users text-base"></i> Gestão de Clientes
                     </a>
-                    
-                    <!-- {{-- Botão Clientes Suspensos --}}
-                    <a href="{{ route('admin.clientes.suspensos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-red-950/50 bg-red-950/10 text-red-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-red-900 hover:text-white flex items-center justify-center gap-1.5">
-                        <i class="la la-user-slash text-base"></i> Clientes Suspensos
-                    </a> -->
-
-                    <!-- {{-- Botão Relatório Mensal --}}
-                    <a href="{{ route('admin.relatorio') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center justify-center gap-1.5">
-                        <i class="la la-chart-bar text-base"></i> Relatório Mensal
-                    </a> -->
 
                     <a href="{{ route('admin.graficos') }}" class="w-full sm:w-auto text-xs font-semibold uppercase tracking-wider border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 px-5 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-cyan-500 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center gap-1.5">
                         <i class="la la-chart-pie text-base"></i> Desempenho Mensal
@@ -285,8 +275,10 @@
                     @foreach($agendamentos as $agendamento)
                         <div class="card-glass p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden group hover:border-zinc-700 transition-all">
                             
+                            {{-- 1. Borda Lateral Colorida com suporte ao status 'remarcado' --}}
                             <div class="absolute top-0 left-0 w-1 h-full 
-                                {{ $agendamento->status === 'confirmado' ? 'bg-pink-500' : '' }}
+                                {{ $agendamento->status === 'agendado' ? 'bg-pink-500' : '' }}
+                                {{ $agendamento->status === 'remarcado' ? 'bg-amber-500' : '' }}
                                 {{ $agendamento->status === 'concluido' ? 'bg-emerald-500' : '' }}
                                 {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500' : '' }}
                                 {{ $agendamento->status === 'cancelado' ? 'bg-zinc-600' : '' }}
@@ -299,12 +291,15 @@
                                         {{ \Carbon\Carbon::parse($agendamento->hora_escolhida)->format('H:i') }}
                                     </div>
                                     
+                                    {{-- 2. Estilo e Cor do Badge do Status --}}
                                     <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider
-                                        {{ $agendamento->status === 'confirmado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : '' }}
+                                        {{ $agendamento->status === 'agendado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : '' }}
+                                        {{ $agendamento->status === 'remarcado' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
                                         {{ $agendamento->status === 'concluido' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : '' }}
                                         {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
                                         {{ $agendamento->status === 'cancelado' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : '' }}
                                     ">
+                                        {{-- 3. Texto do Status --}}
                                         {{ $agendamento->status }}
                                     </span>
                                 </div>
@@ -332,7 +327,8 @@
                             </div>
 
                             <div class="mt-4 pt-3 border-t border-zinc-900/80">
-                                @if($agendamento->status === 'confirmado')
+                                {{-- 4. Mantém os botões ativos tanto para 'agendado' quanto para 'remarcado' --}}
+                                @if(in_array($agendamento->status, ['agendado', 'remarcado']))
                                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                         {{-- Botão Concluir --}}
                                         <form action="{{ route('admin.agendamento.concluir', $agendamento->id) }}" method="POST" onsubmit="confirmarPagamento(event, this)">
@@ -403,6 +399,9 @@
     <footer class="py-6 border-t border-zinc-900 text-center text-zinc-600 text-xs">
         <p>&copy; {{ date('Y') }} NailsStudio Design. Todos os direitos reservados.</p>
     </footer>
+
+</body>
+</html>
 
     {{-- JS E ALERTAS CONFIGURADOS --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

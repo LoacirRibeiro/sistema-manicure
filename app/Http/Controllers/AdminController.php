@@ -355,7 +355,7 @@ class AdminController extends Controller
             'nao_compareceu' => $agendamentos->where('status', 'nao_compareceu')->count(),
             'cancelados'     => $agendamentos->where('status', 'cancelado')->count(),
             // Caso use um status de controle ou flag para remarcados, ajuste aqui:
-            'remarcados'     => $agendamentos->where('status', 'confirmado')->whereNotNull('remarcado_id')->count() // Exemplo de contagem
+            'remarcados'     => $agendamentos->where('is_remarcado', true)->count(),
         ];
 
         return view('admin.relatorio', compact('agendamentos', 'contagem', 'periodoSelecionado'));

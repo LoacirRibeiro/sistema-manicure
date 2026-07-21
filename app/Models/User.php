@@ -18,24 +18,46 @@ class User extends Authenticatable
         'email',
         'telefone',
         'password',
+        'role', // <-- Adicionado para permitir salvar a role direta no banco
         'data_nascimento',
+        'bloqueado_ate',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
-    //Bloqueio de clienres com duas fatas consecuticas
+
     protected $casts = [
-    'bloqueado_ate' => 'datetime',
+        'bloqueado_ate' => 'datetime',
     ];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // 🔥 Isto basta! Criptografa strings limpas automaticamente.
+            'password'          => 'hashed',
         ];
+    }
+
+    /**
+     * Sincroniza a coluna 'role' com as Roles do Spatie/Backpack automaticamente
+     */
+    protected static function booted()
+    {
+        static::saved(function ($user) {
+            // Evita loop infinito ao atualizar o próprio model
+            static::withoutEvents(function () use ($user) {
+                // Pega a primeira role atribuída via Spatie/Backpack (ex: 'manicure', 'admin')
+                $roleName = $user->roles()->first()?->name;
+
+                if ($roleName) {
+                    $user->update([
+                        'role' => strtolower($roleName)
+                    ]);
+                }
+            });
+        });
     }
 
     /**

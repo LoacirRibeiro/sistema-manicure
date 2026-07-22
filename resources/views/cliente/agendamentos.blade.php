@@ -44,6 +44,11 @@
                         if ($agendamento->status == 'agendado') {
                             $borderColor = 'border-l-pink-500';
                             $badgeClass = 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
+                        } elseif ($agendamento->status == 'remarcado') {
+                            // Estilização exclusiva para o status Remarcado (Tom azul neon)
+                            $borderColor = 'border-l-blue-500';
+                            $badgeClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+                            $statusText = 'remarcado';
                         } elseif ($agendamento->status == 'concluido') {
                             $borderColor = 'border-l-emerald-500';
                             $badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
@@ -51,7 +56,6 @@
                             $borderColor = 'border-l-red-500/40';
                             $badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/20';
                         } elseif ($agendamento->status == 'nao_compareceu') {
-                            // Estilização para o caso de Falta / Não Compareceu
                             $borderColor = 'border-l-amber-500';
                             $badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
                             $statusText = 'não compareceu';
@@ -64,31 +68,44 @@
                                 {{ $statusText }}
                             </span>
                             <h3 class="text-lg font-semibold text-white mt-3">{{ $agendamento->servico->nome ?? 'Procedimento' }}</h3>
-                            <p class="text-xs text-zinc-400 mt-1">
-                                <span class="mr-4"><i class="la la-user text-pink-500"></i> Profissional: {{ $agendamento->manicure->name ?? 'Especialista' }}</span>
+                            <p class="text-xs text-zinc-400 mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                <span><i class="la la-user text-pink-500"></i> Profissional: {{ $agendamento->manicure->name ?? 'Especialista' }}</span>
                                 <span><i class="la la-calendar text-pink-500"></i> {{ \Carbon\Carbon::parse($agendamento->data_escolhida)->format('d/m/Y') }} às {{ substr($agendamento->hora_escolhida, 0, 5) }}h</span>
                             </p>
                         </div>
                         
-                        {{-- AÇÃO DE CANCELAR --}}
-                        @if($agendamento->status == 'agendado')
+                        {{-- AÇÕES DE REMARCAR E CANCELAR --}}
+                        @if(in_array($agendamento->status, ['agendado', 'remarcado']))
                             @php
                                 $dataHoraAgendamento = \Carbon\Carbon::parse($agendamento->data_escolhida . ' ' . $agendamento->hora_escolhida);
-                                $podeCancelar = \Carbon\Carbon::now()->diffInHours($dataHoraAgendamento, false) >= 24;
+                                $podeAlterar = \Carbon\Carbon::now()->diffInHours($dataHoraAgendamento, false) >= 24;
                             @endphp
 
-                            <div class="w-full md:w-auto flex justify-end">
-                                @if($podeCancelar)
+                            <div class="w-full md:w-auto flex items-center justify-end gap-2">
+                                @if($podeAlterar)
+                                    {{-- Exibe "Remarcar" SOMENTE se ainda não tiver remarcado nenhuma vez --}}
+                                    @if($agendamento->qtd_remarcacoes < 1 && $agendamento->status == 'agendado')
+                                        <a href="{{ route('cliente.agendamentos.iniciarRemarcacao', $agendamento->id) }}" 
+                                        class="text-xs font-semibold uppercase tracking-wider border border-blue-500/30 bg-blue-500/10 text-blue-400 px-3.5 py-2 rounded-xl transition-all duration-300 hover:bg-blue-600 hover:text-white hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] flex items-center gap-1">
+                                            <i class="la la-clock text-base"></i> Remarcar
+                                        </a>
+                                    @else
+                                        <span class="text-[10px] uppercase font-semibold text-zinc-400 border border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 rounded-lg" title="Você já utilizou o seu limite de 1 remarcação para este agendamento.">
+                                            Já remarcado 
+                                        </span>
+                                    @endif
+
+                                    {{-- Form/Botão Cancelar --}}
                                     <form action="{{ route('cliente.agendamentos.cancelar', $agendamento->id) }}" method="POST" class="form-cancelar">
                                         @csrf
                                         @method('PUT')
-                                        <button type="submit" class="text-xs font-semibold uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-red-500 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-1">
-                                            <i class="la la-trash-alt text-base"></i> Cancelar Agendamento
+                                        <button type="submit" class="text-xs font-semibold uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-500 px-3.5 py-2 rounded-xl transition-all duration-300 hover:bg-red-500 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-1">
+                                            <i class="la la-trash-alt text-base"></i> Cancelar 
                                         </button>
                                     </form>
                                 @else
-                                    <span class="text-[10px] uppercase font-semibold text-zinc-500 border border-zinc-800 bg-zinc-900/40 px-3 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed" title="Cancelamentos só são permitidos com 24h de antecedência.">
-                                        <i class="la la-info-circle text-base text-zinc-600"></i> Bloqueado p/ cancelamento
+                                    <span class="text-[10px] uppercase font-semibold text-zinc-500 border border-zinc-800 bg-zinc-900/40 px-3 py-2 rounded-xl flex items-center gap-1 cursor-not-allowed" title="Alterações só são permitidas com 24h de antecedência.">
+                                        <i class="la la-info-circle text-base text-zinc-600"></i> Bloqueado p/ alterações
                                     </span>
                                 @endif
                             </div>
@@ -103,32 +120,32 @@
         // Intercepta o envio dos formulários de cancelamento
         document.querySelectorAll('.form-cancelar').forEach(form => {
             form.addEventListener('submit', function(e) {
-                e.preventDefault(); // Trava o envio para mostrar o SweetAlert
+                e.preventDefault();
 
                 Swal.fire({
                     title: 'Deseja mesmo cancelar?',
                     text: "Essa ação não poderá ser desfeita no sistema!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#FF007F', // Rosa Neon
-                    cancelButtonColor: '#27272a',  // zinc-800
+                    confirmButtonColor: '#FF007F',
+                    cancelButtonColor: '#27272a',
                     confirmButtonText: 'Sim, cancelar!',
                     cancelButtonText: 'Voltar',
-                    background: '#121212',         // Fundo escuro
-                    color: '#f4f4f5'               // Texto claro
+                    background: '#121212',
+                    color: '#f4f4f5'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        form.submit(); // Envia o formulário se confirmado
+                        form.submit();
                     }
                 });
             });
         });
 
-        // Mostra o alerta de sucesso se houver na sessão do Laravel
-        @if(session('success'))
+        // Alerta de sucesso (aceita 'success' e 'sucesso')
+        @if(session('success') || session('sucesso'))
             Swal.fire({
                 title: 'Sucesso!',
-                text: "{{ session('success') }}",
+                text: "{{ session('success') ?? session('sucesso') }}",
                 icon: 'success',
                 confirmButtonColor: '#FF007F',
                 background: '#121212',
@@ -136,11 +153,11 @@
             });
         @endif
 
-        // Mostra o alerta de erro se houver na sessão do Laravel
-        @if(session('error'))
+        // Alerta de erro (aceita 'error' e 'erro')
+        @if(session('error') || session('erro'))
             Swal.fire({
                 title: 'Ops, algo deu errado!',
-                text: "{{ session('error') }}",
+                text: "{{ session('error') ?? session('erro') }}",
                 icon: 'error',
                 confirmButtonColor: '#FF007F',
                 background: '#121212',

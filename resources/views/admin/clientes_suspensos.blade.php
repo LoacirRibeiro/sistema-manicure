@@ -57,7 +57,7 @@
     </div>
 
     {{-- Conteúdo Principal --}}
-    <main class="flex-grow p-4 md:p-10 max-w-5xl w-full mx-auto space-y-6">
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
 
         {{-- Alertas de Feedback --}}
         @if(session('sucesso'))
@@ -124,7 +124,7 @@
 
                                     {{-- Contato WhatsApp --}}
                                     <td class="p-4">
-                                        @if($cliente->whatsapp)
+                                        @if($cliente->telefone )
                                             <a href="https://wa.me/{{ preg_replace('/\D/', '', $cliente->whatsapp) }}" target="_blank" class="text-xs text-zinc-400 hover:text-green-400 inline-flex items-center gap-1.5 transition">
                                                 <i class="la la-whatsapp text-green-500 text-base"></i> Enviar Mensagem
                                             </a>

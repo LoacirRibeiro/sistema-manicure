@@ -28,7 +28,6 @@
             <a href="{{ route('home.index') }}" class="text-xs font-semibold uppercase tracking-wider border border-pink-500/30 bg-pink-500/10 text-neon px-4 py-2.5 rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-neon hover:text-white hover:shadow-[0_0_15px_rgba(255,0,127,0.5)] flex items-center gap-1.5">
                 Home
             </a>
-        </div>
         @endif
     </header>
 
@@ -37,13 +36,26 @@
         <div class="max-w-4xl w-full card-glass p-6 md:p-10 rounded-3xl relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-600 rounded-full filter blur-[90px] opacity-15"></div>
             
+            {{-- 🔔 BANNER DE MODO DE REMARCAÇÃO (CLIENTE OU ADMIN) --}}
+            @if(session()->has('remarcacao_agendamento_id') || request('remarcar_id'))
+                <div class="mb-8 p-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 backdrop-blur-md flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-blue-500/20 text-blue-400 shrink-0">
+                        <i class="la la-info-circle text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Você está remarcando um agendamento</h4>
+                        <p class="text-xs text-blue-300/80">Escolha a nova data e horário para substituir o atendimento anterior.</p>
+                    </div>
+                </div>
+            @endif
+
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <span class="text-neon font-bold tracking-widest uppercase text-xs">
-                        {{ request('remarcar_id') ? 'Modo Administrativo' : 'Agendamento Online' }}
+                        {{ request('remarcar_id') ? 'Modo Administrativo' : (session()->has('remarcacao_agendamento_id') ? 'Remarcação Cliente' : 'Agendamento Online') }}
                     </span>
                     <h2 class="text-3xl font-title mt-2">
-                        {{ request('remarcar_id') ? 'Remarcar Atendimento da Cliente' : 'Agende seu horário' }}
+                        {{ (request('remarcar_id') || session()->has('remarcacao_agendamento_id')) ? 'Remarcar Atendimento' : 'Agende seu horário' }}
                     </h2>
                     <p class="text-sm text-zinc-400 mt-2 max-w-xl">
                         Defina o serviço, escolha a profissional de sua preferência e selecione o melhor dia e horário para o seu atendimento.
@@ -197,7 +209,7 @@
                 {{-- Botão de Confirmação --}}
                 <div class="pt-4 border-t border-zinc-900">
                     <button type="submit" class="w-full bg-neon text-white font-bold py-4 rounded-xl transition transform hover:scale-[1.01] active:scale-[0.99] uppercase tracking-widest text-center text-sm">
-                        {{ request('remarcar_id') ? 'Salvar Nova Data & Horário' : 'Confirmar Agendamento' }}
+                        {{ (request('remarcar_id') || session()->has('remarcacao_agendamento_id')) ? 'Salvar Nova Data & Horário' : 'Confirmar Agendamento' }}
                     </button>
                 </div>
             </form>

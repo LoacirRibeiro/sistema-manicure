@@ -21,6 +21,9 @@ class Agendamento extends Model
         'observacoes',
         'is_remarcado',
         'user_id',
+        'qtd_remarcacoes',
+        'data_original',
+        'hora_original',
     ];
 
     public function servico()

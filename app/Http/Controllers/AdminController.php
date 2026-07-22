@@ -57,8 +57,8 @@ class AdminController extends Controller
         $agendamentos = $query->orderBy('hora_escolhida', 'asc')->get();
 
         // 2. Conta o total de agendamentos dentro do intervalo das 2 semanas do grid
-        $totalDuasSemanas = Agendamento::whereBetween('data_escolhida', [$hoje, $fimDuasSemanas])
-            ->where('status', '!=', 'cancelado')
+        $totalDuasSemanas = Agendamento::whereIn('status', ['agendado', 'confirmado']) // Garante filtrar só agendados
+            ->whereBetween('data_escolhida', [now()->startOfDay(), now()->addDays(14)->endOfDay()])
             ->count();
 
         $totalEfetuadosMes = Agendamento::where('status', 'concluido')

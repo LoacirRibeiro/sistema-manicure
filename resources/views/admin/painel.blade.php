@@ -63,7 +63,7 @@
 
     {{-- Container com o botão de adicionar serviços (Apenas visível para Admin) --}}
     @if(auth()->check() && auth()->user()->hasRole('admin'))
-        <div class="max-w-6xl mx-auto mt-6 mb-8 px-4 sm:px-6">
+        <div class="w-full max-w-6xl mx-auto mt-6 mb-6 px-4 sm:px-6">
             <div class="card-glass p-6 rounded-3xl flex flex-col gap-6 border border-zinc-800/80 bg-zinc-900/10">
                 
                 {{-- Bloco de Texto e Ícone --}}
@@ -104,7 +104,7 @@
 
     {{-- FILTRO DE HISTÓRICO COM FORMATO BR --}}
     <section class="w-full bg-zinc-950/40 border-b border-zinc-900/60 py-6 px-4 md:px-10">
-        <div class="max-w-6xl w-full mx-auto">
+        <div class="max-w-6xl w-full mx-auto mt-6 mb-6 px-4 sm:px-6">
             <form id="filtroHistoricoForm" action="{{ route('admin.painel') }}" method="GET" onsubmit="prepararEnvioData(event)" class="card-glass p-5 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 items-end border border-zinc-800/60">
                 
                 {{-- Filtro por Nome --}}
@@ -118,14 +118,14 @@
 
                 {{-- Filtro por Qualquer Data Passada - Formato BR --}}
                 <div class="space-y-1.5">
-                    <label for="input_data_br" class="block text-xs uppercase tracking-wider text-zinc-400 font-semibold">Buscar por Data (DD/MM/AAAA)</label>
+                    <label for="input_data_br" class="block text-xs uppercase tracking-wider text-zinc-400 font-semibold">Buscar por Data</label>
                     <div class="relative">
                         <i class="la la-calendar absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-base"></i>
                         
                         @php
                             $dataExibicao = request('data_manual') ? \Carbon\Carbon::parse(request('data_manual'))->format('d/m/Y') : '';
                         @endphp
-                        <input type="text" id="input_data_br" value="{{ $dataExibicao }}" placeholder="Ex: 25/12/2024" maxlength="10" oninput="mascaraData(this)" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-9 pr-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none transition-all">
+                        <input type="text" id="input_data_br" value="{{ $dataExibicao }}" placeholder="Ex: 25/12/2024" maxlength="10" oninput="mascaraData(this)" class="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-9 pr-4 py-2.5 text-sm focus:border-pink-500 focus:outline-none placeholder-zinc-600 transition-all">
                         
                         <input type="hidden" id="hidden_data_manual" name="data_manual" value="{{ request('data_manual') }}">
                     </div>
@@ -275,10 +275,10 @@
                     @foreach($agendamentos as $agendamento)
                         <div class="card-glass p-5 rounded-2xl flex flex-col justify-between relative overflow-hidden group hover:border-zinc-700 transition-all">
                             
-                            {{-- 1. Borda Lateral Colorida com suporte ao status 'remarcado' --}}
+                            {{-- 1. Borda Lateral Colorida (Azul para Remarcado) --}}
                             <div class="absolute top-0 left-0 w-1 h-full 
                                 {{ $agendamento->status === 'agendado' ? 'bg-pink-500' : '' }}
-                                {{ $agendamento->status === 'remarcado' ? 'bg-amber-500' : '' }}
+                                {{ $agendamento->status === 'remarcado' ? 'bg-blue-500' : '' }}
                                 {{ $agendamento->status === 'concluido' ? 'bg-emerald-500' : '' }}
                                 {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500' : '' }}
                                 {{ $agendamento->status === 'cancelado' ? 'bg-zinc-600' : '' }}
@@ -293,13 +293,12 @@
                                     
                                     {{-- 2. Estilo e Cor do Badge do Status --}}
                                     <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider
-                                        {{ $agendamento->status === 'agendado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : '' }}
-                                        {{ $agendamento->status === 'remarcado' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
+                                        {{ $agendamento->status === 'agendado' ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : '' }}
+                                        {{ $agendamento->status === 'remarcado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : '' }}
                                         {{ $agendamento->status === 'concluido' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : '' }}
                                         {{ $agendamento->status === 'nao_compareceu' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : '' }}
                                         {{ $agendamento->status === 'cancelado' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : '' }}
                                     ">
-                                        {{-- 3. Texto do Status --}}
                                         {{ $agendamento->status }}
                                     </span>
                                 </div>
@@ -324,6 +323,18 @@
                                     <span class="text-zinc-500">Manicure:</span>
                                     <span class="font-medium text-zinc-300">{{ $agendamento->manicure->name ?? 'Não definida' }}</span>
                                 </div>
+
+                                {{-- 📜 HISTÓRICO DE REMARCAÇÃO (Audit Log) --}}
+                                @if($agendamento->data_original && $agendamento->hora_original)
+                                    <div class="text-[11px] bg-blue-500/10 border border-blue-500/20 text-blue-300 p-2 rounded-xl flex items-center gap-2 mt-2">
+                                        <i class="la la-history text-base text-blue-400"></i>
+                                        <span>
+                                            <strong>Anteriormente em:</strong> 
+                                            {{ \Carbon\Carbon::parse($agendamento->data_original)->format('d/m') }} 
+                                            às {{ substr($agendamento->hora_original, 0, 5) }}h
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="mt-4 pt-3 border-t border-zinc-900/80">

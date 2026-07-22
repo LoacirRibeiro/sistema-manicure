@@ -65,8 +65,11 @@ Route::middleware(['auth'])->group(function () {
     // Fluxo de Agendamento do Cliente
     Route::get('/agendamento/horarios', [AgendamentoController::class, 'escolherHorario'])->name('agendamento.horarios');
     Route::post('/agendamento/salvar', [AgendamentoController::class, 'salvarAgendamento'])->name('agendamento.salvar');
-    Route::get('/meus-agendamentos', [AgendamentoController::class, 'meusAgendamentos'])->name('cliente.agendamentos');
+   Route::get('/meus-agendamentos/{id?}', [AgendamentoController::class, 'meusAgendamentos'])->name('cliente.agendamentos');
     Route::put('/meus-agendamentos/{id}/cancelar', [AgendamentoController::class, 'clienteCancela'])->name('cliente.agendamentos.cancelar');
+    // Rota para o cliente remarcar o próprio agendamento
+    Route::get('/meus-agendamentos/{id}/remarcar', [AgendamentoController::class, 'iniciarRemarcacao'])
+        ->name('cliente.agendamentos.iniciarRemarcacao');
 
 });
 

@@ -40,9 +40,11 @@
 </div>
 
 <body class="text-zinc-200 p-4 md:p-8 space-y-8">
-
-    {{-- Container PAI ÚNICO que define a largura exata de toda a página --}}
     <div class="max-w-4xl mx-auto space-y-6">
+
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Meus <span class="text-neon">Agendamentos</span></h1>
+        </div>
 
         {{-- 1. Banner Informativo (Alinhado) --}}
         <div class="card-glass p-6 rounded-3xl border border-zinc-800/80 bg-zinc-900/10">
@@ -51,7 +53,6 @@
                     <i class="la la-clock"></i>
                 </div>
                 <div>
-                    <h4 class="text-base font-bold text-white">Meus Agendamentos</h4>
                     <p class="text-xs text-zinc-400 mt-0.5">
                         Acompanhe aqui o status dos seus agendamentos.<br class="hidden sm:inline">
                         <span class="text-pink-400 font-medium">Nota:</span> Alterações e cancelamentos só são permitidos com até <strong class="text-zinc-200">24 horas de antecedência</strong> e limitado a 1 remarcagem por agendamento.

@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\ConfiguracaoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\Schedule;
+
 // Route::get('/rodar-seeder-manicure', function () {
 //     try {
 //         \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
@@ -36,6 +38,15 @@ use Illuminate\Support\Facades\DB;
 // ==========================================
 // ROTAS PÚBLICAS (Acessíveis por qualquer visitante)
 // ==========================================
+
+// Lembrete do agendamento (roda todo dia às 18:00)
+Schedule::command('whatsapp:lembrete-agendamentos')->dailyAt('9:00');
+
+// Mensagem de aniversário (roda todo dia às 09:00)
+Schedule::command('whatsapp:aniversariantes')->dailyAt('09:00');
+
+//para testar a rota de envio de mensagens de aniversário, você pode usar a seguinte rota temporária:
+//php artisan whatsapp:aniversariantes
 
 // Página Inicial e Portfólio
 Route::get('/', [HomeController::class, 'index'])->name('home.index');

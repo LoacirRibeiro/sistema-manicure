@@ -9,6 +9,7 @@ use App\Models\Servico;
 use App\Models\User; 
 use App\Models\Agendamento;
 use App\Models\Bloqueio;
+use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -301,6 +302,22 @@ class AgendamentoController extends Controller
                     'data_original'   => $dataOrig,
                     'hora_original'   => $horaOrig,
                 ]);
+
+                // 🔔 WHATSAPP: Remarcação efetuada pelo cliente
+                $dataFmt = Carbon::parse($dadosValidados['data_escolhida'])->format('d/m/Y');
+                $horaFmt = Carbon::parse($dadosValidados['hora_escolhida'])->format('H:i');
+                $servicoNome = $agendamentoExistente->servico->nome ?? 'Serviço';
+                $manicureNome = $agendamentoExistente->manicure->name ?? 'Profissional';
+
+                $msgWhatsApp = "Olá, *{$agendamentoExistente->cliente_nome}*! 🔄\n\n"
+                    . "Seu agendamento foi *remarcado* com sucesso!\n\n"
+                    . "💅 *Serviço:* {$servicoNome}\n"
+                    . "📅 *Nova Data:* {$dataFmt}\n"
+                    . "⏰ *Novo Horário:* {$horaFmt}h\n"
+                    . "👩‍🎨 *Profissional:* {$manicureNome}\n\n"
+                    . "Aguardamos você no novo horário!";
+
+                WhatsAppService::enviarMensagem($agendamentoExistente->cliente_whatsapp, $msgWhatsApp);
             }
 
             session()->forget(['remarcacao_agendamento_id', 'agendamento_cliente_id']);
@@ -310,7 +327,7 @@ class AgendamentoController extends Controller
         }
 
         // Criação do novo agendamento
-        Agendamento::create([
+        $novoAgendamento = Agendamento::create([
             'cliente_nome'     => $clienteParaAgendamento ? $clienteParaAgendamento->name : $dadosValidados['cliente_nome'],
             'cliente_whatsapp' => $clienteParaAgendamento ? ($clienteParaAgendamento->telefone ?? $dadosValidados['cliente_whatsapp']) : ($dadosValidados['cliente_whatsapp'] ?? 'Não informado'),
             'servico_id'       => $dadosValidados['servico_id'],
@@ -320,6 +337,22 @@ class AgendamentoController extends Controller
             'status'           => 'agendado',
             'user_id'          => $usuarioAlvo ? $usuarioAlvo->id : null,
         ]);
+
+        // 🔔 WHATSAPP: Novo agendamento confirmado
+        $dataFmt = Carbon::parse($novoAgendamento->data_escolhida)->format('d/m/Y');
+        $horaFmt = Carbon::parse($novoAgendamento->hora_escolhida)->format('H:i');
+        $servicoNome = $novoAgendamento->servico->nome ?? 'Serviço';
+        $manicureNome = $novoAgendamento->manicure->name ?? 'Profissional';
+
+        $msgWhatsApp = "Olá, *{$novoAgendamento->cliente_nome}*! 👋\n\n"
+            . "Seu agendamento foi *confirmado* com sucesso!\n\n"
+            . "💅 *Serviço:* {$servicoNome}\n"
+            . "📅 *Data:* {$dataFmt}\n"
+            . "⏰ *Horário:* {$horaFmt}h\n"
+            . "👩‍🎨 *Profissional:* {$manicureNome}\n\n"
+            . "Aguardamos a sua visita!";
+
+        WhatsAppService::enviarMensagem($novoAgendamento->cliente_whatsapp, $msgWhatsApp);
 
         if (session()->has('agendamento_cliente_id')) {
             session()->forget('agendamento_cliente_id');
@@ -352,6 +385,22 @@ class AgendamentoController extends Controller
             'is_remarcado'   => true,
         ]);
 
+        // 🔔 WHATSAPP: Remarcação efetuada pelo Painel Admin
+        $dataFmt = Carbon::parse($request->nova_data)->format('d/m/Y');
+        $horaFmt = Carbon::parse($request->nova_hora)->format('H:i');
+        $servicoNome = $agendamento->servico->nome ?? 'Serviço';
+        $manicureNome = $agendamento->manicure->name ?? 'Profissional';
+
+        $msgWhatsApp = "Olá, *{$agendamento->cliente_nome}*! 🔄\n\n"
+            . "Seu agendamento foi *remarcado* pelo estabelecimento.\n\n"
+            . "💅 *Serviço:* {$servicoNome}\n"
+            . "📅 *Nova Data:* {$dataFmt}\n"
+            . "⏰ *Novo Horário:* {$horaFmt}h\n"
+            . "👩‍🎨 *Profissional:* {$manicureNome}\n\n"
+            . "Esperamos por você!";
+
+        WhatsAppService::enviarMensagem($agendamento->cliente_whatsapp, $msgWhatsApp);
+
         return redirect()->route('admin.painel', ['data' => $request->nova_data])
             ->with('sucesso', 'Agendamento remarcado com sucesso!');
     }
@@ -381,6 +430,16 @@ class AgendamentoController extends Controller
 
         $agendamento->update(['status' => 'cancelado']);
 
+        // 🔔 WHATSAPP: Cancelamento efetuado pelo próprio cliente
+        $dataFmt = Carbon::parse($agendamento->data_escolhida)->format('d/m/Y');
+        $horaFmt = Carbon::parse($agendamento->hora_escolhida)->format('H:i');
+
+        $msgWhatsApp = "Olá, *{$agendamento->cliente_nome}*.\n\n"
+            . "Confirmamos o *cancelamento* do seu agendamento do dia *{$dataFmt}* às *{$horaFmt}h*.\n\n"
+            . "Esperamos ver você novamente em breve!";
+
+        WhatsAppService::enviarMensagem($agendamento->cliente_whatsapp, $msgWhatsApp);
+
         return redirect()->back()->with('success', 'Agendamento cancelado com sucesso!');
     }
 
@@ -398,6 +457,14 @@ class AgendamentoController extends Controller
             'forma_pagamento' => $request->input('forma_pagamento', 'Não Informado')
         ]);
 
+        // 🔔 WHATSAPP: Atendimento Concluído
+        $msgWhatsApp = "Olá, *{$agendamento->cliente_nome}*! ✨\n\n"
+            . "Muito obrigado por sua visita! Seu atendimento foi *concluído* com sucesso.\n"
+            . "Esperamos que tenha gostado do resultado! 🥰\n\n"
+            . "Até a próxima!";
+
+        WhatsAppService::enviarMensagem($agendamento->cliente_whatsapp, $msgWhatsApp);
+
         return redirect()->back()->with('sucesso', 'Serviço concluído e pagamento registrado com sucesso!');
     }
 
@@ -412,6 +479,16 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id);
         $agendamento->update(['status' => 'cancelado']);
 
+        // 🔔 WHATSAPP: Cancelamento realizado pelo Admin
+        $dataFmt = Carbon::parse($agendamento->data_escolhida)->format('d/m/Y');
+        $horaFmt = Carbon::parse($agendamento->hora_escolhida)->format('H:i');
+
+        $msgWhatsApp = "Olá, *{$agendamento->cliente_nome}*.\n\n"
+            . "Informamos que o seu agendamento para o dia *{$dataFmt}* às *{$horaFmt}h* foi *cancelado*.\n\n"
+            . "Caso queira reagendar, entre em contato ou acesse o site.";
+
+        WhatsAppService::enviarMensagem($agendamento->cliente_whatsapp, $msgWhatsApp);
+
         return redirect()->back()->with('sucesso', 'Agendamento cancelado.');
     }
 
@@ -425,6 +502,15 @@ class AgendamentoController extends Controller
 
         $agendamento = Agendamento::findOrFail($id);
         $agendamento->update(['status' => 'nao_compareceu']);
+
+        // 🔔 WHATSAPP: Registro de Falta
+        $horaFmt = Carbon::parse($agendamento->hora_escolhida)->format('H:i');
+
+        $msgWhatsApp = "Olá, *{$agendamento->cliente_nome}*.\n\n"
+            . "Registramos que você não pôde comparecer ao seu atendimento de hoje às *{$horaFmt}h*.\n\n"
+            . "Lembre-se de avisar ou cancelar com antecedência em seus próximos agendamentos.";
+
+        WhatsAppService::enviarMensagem($agendamento->cliente_whatsapp, $msgWhatsApp);
 
         $usuarioId = $agendamento->user_id;
         $usuario = $usuarioId ? User::find($usuarioId) : User::where('name', $agendamento->cliente_nome)->first();

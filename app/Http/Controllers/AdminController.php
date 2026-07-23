@@ -83,7 +83,7 @@ class AdminController extends Controller
 
         // 4. Lógica para calcular quais dos próximos 14 dias estão lotados ou bloqueados
         $diasLotados = [];
-        $limiteHorarios = 5; 
+        // $limiteHorarios = 5; 
 
         for ($i = 0; $i < 14; $i++) {
             $dataVerificar = Carbon::today()->addDays($i);
@@ -127,7 +127,11 @@ class AdminController extends Controller
                 ->where('status', '!=', 'cancelado')
                 ->count();
 
-            if (($qtdAgendados + $horariosBloqueadosQtd) >= $totalHorariosPossiveis || $qtdAgendados >= $limiteHorarios) {
+                //comentado, pois ao marcar o agendamento no sabado, no 5° AGENDAMENO JA ESTAVA LOTADO o sistema não estava considerando o limite de horários, então foi decidido que o sistema só vai considerar o limite de horários quando houver bloqueio parcial, caso contrário, o sistema vai considerar que todos os horários estão disponíveis.
+            // if (($qtdAgendados + $horariosBloqueadosQtd) >= $totalHorariosPossiveis || $qtdAgendados >= $limiteHorarios) {
+            //     $diasLotados[] = $dataString;
+            // }
+            if (($qtdAgendados + $horariosBloqueadosQtd) >= $totalHorariosPossiveis) {
                 $diasLotados[] = $dataString;
             }
         }
@@ -144,8 +148,6 @@ class AdminController extends Controller
             'totalInativos'
         ));
     }
-
-   
 
     public function faturamento(Request $request)
     {

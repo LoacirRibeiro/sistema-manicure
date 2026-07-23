@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
 
         // 3. Cria a manicure se ela não existir
         $manicure = User::firstOrCreate(
-            ['email' => 'marcirlle@salao.com'], // Coluna única de verificação
+            ['email' => 'marcielle@salao.com'], // Coluna única de verificação
             [
                 'name' => 'Marcielle Paiva',
                 'telefone' => '(63) 99218-5324',

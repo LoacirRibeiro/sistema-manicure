@@ -31,6 +31,14 @@
         @endif
     </header>
 
+    <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+        <div class="flex justify-start mt-4 ml-4">
+            <span class="text-xs uppercase tracking-wider bg-red-950/50 px-3 py-1 rounded-full text-red-400 border border-red-900/50">
+                Agendamento 
+            </span>
+        </div>
+    </div>
+
     {{-- Conteúdo Principal --}}
     <main class="py-12 px-4 flex-grow flex items-center justify-center">
         <div class="max-w-4xl w-full card-glass p-6 md:p-10 rounded-3xl relative overflow-hidden">
